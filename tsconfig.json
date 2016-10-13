@@ -6,7 +6,8 @@
 		"outDir": "js",
 		"types": [
 			"node"
-		]
+		],
+		"strictNullChecks": true
 	},
 	"include": [
 		"src/**/*"

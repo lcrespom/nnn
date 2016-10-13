@@ -1,2 +1,3 @@
+import { NeuralNetwork } from './neurons';
 
-console.log('Hello from nnn');
+console.log('Work in progress, please come back later');
