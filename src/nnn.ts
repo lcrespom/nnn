@@ -1,3 +1,9 @@
 import { NeuralNetwork } from './neurons';
 
-console.log('Work in progress, please come back later');
+main();
+
+function main() {
+	let nn = new NeuralNetwork(2, 3, 1);
+	let outputs = nn.calculate([1, 2]);
+	console.log('Test outputs:', outputs);
+}
