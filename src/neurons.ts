@@ -122,6 +122,7 @@ export class NeuralNetwork {
 				totalError = this.totalError(actualOuts, expectedOuts);
 			}
 			iteration++;
+			this.reportLearn(iteration, totalError);
 		} while (iteration < this.maxLearnIterations && totalError > this.acceptableError);
 		// ripeti (* epoche *)
 		// 	 per ogni esempio {X,D}
@@ -130,6 +131,10 @@ export class NeuralNetwork {
 		// 	 fine;
 		// 	 calcola errore dell'intera epoca;
 		// finché errore dell'epoca inferiore ad errore ammesso
+	}
+
+	reportLearn(iteration, totalError) {
+		console.log(`Learn iteration ${iteration} - error: ${totalError}`);
 	}
 
 	totalError(actualOuts: number[], expectedOuts: number[]): number {
