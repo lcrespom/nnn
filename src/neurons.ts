@@ -78,7 +78,7 @@ export class NeuralNetwork {
 		let errors: number[] = [];
 		for (let i = 0; i < this.outputLayer.length; i++)
 			errors[i] = this.backPropagateOutNeuron(
-				this.outputLayer[i], targets[i], hiddenOuts);
+				this.outputLayer[i], targets[i], this.addBias(hiddenOuts));
 		// Adjust weights for hidden layer
 		for (let i = 0; i < this.hiddenLayer.length; i++)
 			this.backPropagateHiddenNeuron(
