@@ -110,7 +110,7 @@ export class NeuralNetwork {
 
 	// -------------------- Iterative learning --------------------
 
-	learn(examples: Example[]) {
+	learn(examples: Example[]): number {
 		let iteration = 0;
 		let totalError = 0;
 		do {
@@ -123,6 +123,7 @@ export class NeuralNetwork {
 			iteration++;
 			this.reportLearn(iteration, totalError);
 		} while (iteration < this.maxLearnIterations && totalError > this.acceptableError);
+		return iteration;
 		// ripeti (* epoche *)
 		// 	 per ogni esempio {X,D}
 		// 		esegui la rete con X e trova Y;

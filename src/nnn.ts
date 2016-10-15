@@ -22,7 +22,11 @@ function learnAdd1() {
 	];
 	let nn = new NeuralNetwork(3, 4, 3);
 	nn.maxLearnIterations = +process.argv[2] || 10;
-	nn.learn(examples);
+	let iterations = nn.learn(examples);
+	if (iterations < nn.maxLearnIterations)
+		console.log('Learning success');
+	else
+		console.log('Warning: error above acceptable value, reached maximum iterations');
 	console.log('\n--- Testing learned neural network ---');
 	console.log('Output of 100:', nn.forward([1, 0, 0]));
 	console.log('Output of 101:', nn.forward([1, 0, 1]));
