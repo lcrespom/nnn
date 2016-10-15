@@ -75,24 +75,24 @@ export class NeuralNetwork {
 	backPropagate(inputs: number[], targets: number[]): void {
 		// Adjust weights for output layer
 		let hiddenOuts = this.hiddenLayer.map(neuron => neuron.output);
-		let errors: number[] = [];
+		let hiddenErrors: number[] = [];
+		for (let i = 0; i < this.hiddenLayer.length; i++) hiddenErrors.push(0);
 		for (let i = 0; i < this.outputLayer.length; i++)
-			errors[i] = this.backPropagateOutNeuron(
-				this.outputLayer[i], targets[i], this.addBias(hiddenOuts));
+			this.backPropagateOutNeuron(
+				this.outputLayer[i], targets[i], this.addBias(hiddenOuts), hiddenErrors);
 		// Adjust weights for hidden layer
 		for (let i = 0; i < this.hiddenLayer.length; i++)
 			this.backPropagateHiddenNeuron(
-				this.hiddenLayer[i], errors[i], this.addBias(inputs));
+				this.hiddenLayer[i], hiddenErrors[i], this.addBias(inputs));
 	}
 
-	backPropagateOutNeuron(neuron: Neuron, target: number, prevLayerOuts: number[]): number {
+	backPropagateOutNeuron(neuron: Neuron, target: number,
+		prevLayerOuts: number[], prevLayerErrors: number[]): void {
 		let delta = (target - neuron.output) * neuron.output * (1 - neuron.output);
-		let error = 0;
 		for (let j = 0; j < neuron.weights.length; j++) {
-			error += delta * neuron.weights[j];
+			prevLayerErrors[j] += delta * neuron.weights[j];
 			neuron.weights[j] += this.epsilon * delta * prevLayerOuts[j];
 		}
-		return error;
 		// delta := (D[j] - Y[j]) * Y[j] * (1 - Y[j]);
 		// per ogni unità k del livello H (compreso bias)
 		//    ErrH[k] := ErrH[k] + (delta * W2[k,j]);
@@ -111,7 +111,6 @@ export class NeuralNetwork {
 	// -------------------- Iterative learning --------------------
 
 	learn(examples: Example[]) {
-		//TODO test
 		let iteration = 0;
 		let totalError = 0;
 		do {

@@ -1,3 +1,4 @@
+/* tslint:disable:no-unused-variable */
 import { NeuralNetwork, Example } from './neurons';
 
 learnAdd1();
@@ -20,6 +21,13 @@ function learnAdd1() {
 		{ inputs: [1, 1, 1], outputs: [0, 0, 0] }
 	];
 	let nn = new NeuralNetwork(3, 4, 3);
-	nn.maxLearnIterations = 10;
+	nn.maxLearnIterations = +process.argv[2] || 10;
 	nn.learn(examples);
+	console.log('\n--- Testing learned neural network ---');
+	console.log('Output of 100:', nn.forward([1, 0, 0]));
+	console.log('Output of 101:', nn.forward([1, 0, 1]));
+	console.log('Output of 010:', nn.forward([0, 1, 0]));
+	console.log('Output of 001:', nn.forward([0, 0, 1]));
+	console.log('Output of 000:', nn.forward([0, 0, 0]));
+	console.log('Output of 111:', nn.forward([1, 1, 1]));
 }
