@@ -28,10 +28,29 @@ function learnAdd1() {
 	else
 		console.log('Warning: error above acceptable value, reached maximum iterations');
 	console.log('\n--- Testing learned neural network ---');
-	console.log('Output of 100:', nn.forward([1, 0, 0]));
-	console.log('Output of 101:', nn.forward([1, 0, 1]));
-	console.log('Output of 010:', nn.forward([0, 1, 0]));
-	console.log('Output of 001:', nn.forward([0, 0, 1]));
-	console.log('Output of 000:', nn.forward([0, 0, 0]));
-	console.log('Output of 111:', nn.forward([1, 1, 1]));
+	testValue(nn, [0, 0, 0]);
+	testValue(nn, [0, 0, 1]);
+	testValue(nn, [0, 1, 0]);
+	testValue(nn, [0, 1, 1]);
+	testValue(nn, [1, 0, 0]);
+	testValue(nn, [1, 0, 1]);
+	testValue(nn, [1, 1, 0]);
+	testValue(nn, [1, 1, 1]);
+}
+
+function testValue(nn: NeuralNetwork, inputs: number[]) {
+	let outputs = nn.forward(inputs);
+	let sIn = numArrayToBits(inputs);
+	let sOut = numArrayToBits(outputs);
+	let sValues = fmtNum(outputs[0]) +
+		', ' + fmtNum(outputs[1]) + ', ' + fmtNum(outputs[2]);
+	console.log(`Output of ${sIn}: ${sOut} (${sValues})`);
+}
+
+function numArrayToBits(a: number[]): string {
+	return a.reduce((s, n) => n < 0.5 ? s + '0' : s + '1', '');
+}
+
+function fmtNum(n: number, len = 5): string {
+	return n.toString().substr(0, len);
 }
