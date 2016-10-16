@@ -34,7 +34,7 @@ export class NeuralNetwork {
 	learnIteration: number;
 	learnError: number;
 
-	constructor(private numInputs: number, private numHidden: number, private numOutputs: number) {
+	constructor(public numInputs: number, public numHidden: number, public numOutputs: number) {
 		// Initialize default params
 		this.activationFunc = DEFAULT_ACTIVATION_FUNCTION;
 		this.epsilon = 0.5;
@@ -139,7 +139,8 @@ export class NeuralNetwork {
 	}
 
 	reportLearn(iteration, totalError) {
-		console.log(`Learn iteration ${iteration} - error: ${totalError}`);
+		if (iteration % 100 == 0)
+			console.log(`Learn iteration ${iteration} - error: ${totalError}`);
 	}
 
 }

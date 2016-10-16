@@ -19,12 +19,19 @@ $(function() {
 			console.log(`*** Learned in ${nn.learnIteration} iterations, with an error of ${nn.learnError}`);
 			$('#butlearn').text('Learn');
 			$('#liters').val(nn.learnIteration);
-			$('#lerror').val(nn.learnError.toString().substr(0, 9));
+			$('#lerror').val(fmtNum(nn.learnError, 9));
 			$('#buttest').attr('disabled', <any>false);
 		}, 10);
 	});
 	$('#buttest').click(_ => {
-		//TODO: test
+		let formData = getFormData();
+		let tests = parseTestLines(formData.testLines, nn.numInputs);
+		let testResults: number[][] = [];
+		tests.forEach(test => testResults.push(nn.forward(test)));
+		let strResult = testResults
+			.map(result => result.map(x => fmtNum(x, 6)).join('  '))
+			.join('\n');
+		$('#tout').text(strResult);
 	});
 });
 
@@ -42,13 +49,12 @@ function getFormData() {
 
 function parseLearnLines(allLines: string, numInputs: number, numOutputs: number): Example[] {
 	let examples: Example[] = [];
-	let lines = allLines.split('\n');
+	let lines = allLines.split('\n').filter(line => line.length > 0);
 	lines.forEach((line, i) => {
-		if (line.length == 0) return;
 		let example = parseExample(line);
 		//TODO validate line by checking:
 		//	- if example is null, then the / is missing
-		//	- if the number of inputs or outputs is invalid, then some data is missing
+		//	- if the number of inputs or outputs is invalid, then some values are missing or exceeding
 		//	- if some value is NaN, then there are invalid numbers
 		if (example) examples.push(example);
 	});
@@ -62,4 +68,22 @@ function parseExample(line: string): Example | null {
 	let inputs = str2numarr(inout[0]);
 	let outputs = str2numarr(inout[1]);
 	return { inputs, outputs };
+}
+
+function parseTestLines(allLines: string, numInputs: number): number[][] {
+	let tests: number[][];
+	tests = [];
+	let lines = allLines.split('\n').filter(line => line.length > 0);
+	lines.forEach((line, i) => {
+		let inputs = line.split(' ').filter(s => s.length > 0).map(s => parseFloat(s));
+		//TODO validate line by checking:
+		//	- if the number of inputs is invalid, then some values are missing or exceeding
+		//	- if some value is NaN, then there are invalid numbers
+		tests.push(inputs);
+	});
+	return tests;
+}
+
+function fmtNum(n: number, len = 5): string {
+	return n.toString().substr(0, len);
 }
