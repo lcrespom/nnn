@@ -76,7 +76,7 @@
 					<textarea id="ldata" style="width: 100%"
 						rows="5" class="form-control"></textarea>
 				</div>
-				<p id="status"></p>
+				<p id="lstatus"></p>
 				<div class="form-group">
 					<button id="butlearn"
 						type="button" class="btn btn-primary">Learn</button>
@@ -93,6 +93,34 @@
 				</div>
 			</fieldset>
 		</form>
+
+		<form class="form-inline">
+			<fieldset>
+				<legend>Test</legend>
+				<div class="form-group">
+					<label for="tsample">Test data line format:</label>
+					<input id="tsample" value="in1 in2 in3"
+						type="text" class="form-control" readonly size="15">
+				</div>
+				<br>
+				<div class="form-group" style="width: 45%; padding-right: 1em">
+					<label for="tdata">Test data lines:</label><br>
+					<textarea id="tdata" style="width: 100%"
+						rows="5" class="form-control"></textarea>
+				</div>
+				<div class="form-group" style="width: 45%; padding-right: 1em">
+					<label for="tout">Test results:</label><br>
+					<textarea id="tout" style="width: 100%"
+						rows="5" class="form-control"></textarea>
+				</div>
+				<p id="tstatus"></p>
+				<div class="form-group">
+					<button id="buttest"
+						type="button" class="btn btn-primary">Test</button>
+				</div>
+			</fieldset>
+		</form>
+
 	</div>
 </div>
 
