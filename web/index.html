@@ -76,7 +76,14 @@
 				<div class="form-group" style="width: 100%; padding-right: 1em">
 					<label for="ldata">Learn data lines:</label><br>
 					<textarea id="ldata" style="width: 100%"
-						rows="5" class="form-control"></textarea>
+						rows="5" class="form-control">0 0 0 / 0 0 1
+0 0 1 / 0 1 0
+0 1 0 / 0 1 1
+0 1 1 / 1 0 0
+1 0 0 / 1 0 1
+1 0 1 / 1 1 0
+1 1 0 / 1 1 1
+1 1 1 / 0 0 0</textarea>
 				</div>
 				<p id="lstatus"></p>
 				<div class="form-group">
@@ -89,8 +96,8 @@
 						type="text" class="form-control" readonly size="6">
 				</div>
 				<div class="form-group">
-					<label for="error">Actual error:</label>
-					<input id="error"
+					<label for="lerror">Actual error:</label>
+					<input id="lerror"
 						type="text" class="form-control" readonly size="9">
 				</div>
 			</fieldset>
@@ -117,7 +124,7 @@
 				</div>
 				<p id="tstatus"></p>
 				<div class="form-group">
-					<button id="buttest"
+					<button id="buttest" disabled
 						type="button" class="btn btn-primary">Test</button>
 				</div>
 			</fieldset>

@@ -30,6 +30,9 @@ export class NeuralNetwork {
 	epsilon: number;
 	acceptableError: number;
 	maxLearnIterations: number;
+	// Learn tracking
+	learnIteration: number;
+	learnError: number;
 
 	constructor(private numInputs: number, private numHidden: number, private numOutputs: number) {
 		// Initialize default params
@@ -93,48 +96,31 @@ export class NeuralNetwork {
 			prevLayerErrors[j] += delta * neuron.weights[j];
 			neuron.weights[j] += this.epsilon * delta * prevLayerOuts[j];
 		}
-		// delta := (D[j] - Y[j]) * Y[j] * (1 - Y[j]);
-		// per ogni unità k del livello H (compreso bias)
-		//    ErrH[k] := ErrH[k] + (delta * W2[k,j]);
-		//    W2[k,j] := W2[k,j] + (epsilon * delta * H[k]);
 	}
 
 	backPropagateHiddenNeuron(neuron: Neuron, error: number, inputs: number[]): void {
 		let delta = error * neuron.output * (1 - neuron.output);
 		for (let j = 0; j < neuron.weights.length; j++)
 			neuron.weights[j] += this.epsilon * delta * inputs[j];
-		// delta := ErrH[k] * H[k] * (1 - H[k]);
-		// per ogni unità i del livello X (compreso bias)
-		//    Wl[i,k] := Wl[i,k] + (epsilon * delta * X[i]);
 	}
 
 	// -------------------- Iterative learning --------------------
 
-	learn(examples: Example[]): number {
-		let iteration = 0;
-		let totalError = 0;
+	learn(examples: Example[]): boolean {
+		this.learnIteration = 0;
+		this.learnError = 0;
 		do {
 			for (let i = 0; i < examples.length; i++) {
 				let actualOuts = this.forward(examples[i].inputs);
 				let expectedOuts = examples[i].outputs;
 				this.backPropagate(examples[i].inputs, expectedOuts);
-				totalError = this.totalError(actualOuts, expectedOuts);
+				this.learnError = this.totalError(actualOuts, expectedOuts);
 			}
-			iteration++;
-			this.reportLearn(iteration, totalError);
-		} while (iteration < this.maxLearnIterations && totalError > this.acceptableError);
-		return iteration;
-		// ripeti (* epoche *)
-		// 	 per ogni esempio {X,D}
-		// 		esegui la rete con X e trova Y;
-		// 		backpropagate;
-		// 	 fine;
-		// 	 calcola errore dell'intera epoca;
-		// finché errore dell'epoca inferiore ad errore ammesso
-	}
-
-	reportLearn(iteration, totalError) {
-		console.log(`Learn iteration ${iteration} - error: ${totalError}`);
+			this.learnIteration++;
+			this.reportLearn(this.learnIteration, this.learnError);
+		} while (this.learnIteration < this.maxLearnIterations
+			&& this.learnError > this.acceptableError);
+		return this.learnError <= this.acceptableError;
 	}
 
 	totalError(actualOuts: number[], expectedOuts: number[]): number {
@@ -151,6 +137,11 @@ export class NeuralNetwork {
 		biasedValues.push(1);
 		return biasedValues;
 	}
+
+	reportLearn(iteration, totalError) {
+		console.log(`Learn iteration ${iteration} - error: ${totalError}`);
+	}
+
 }
 
 
