@@ -13,3 +13,18 @@
 	width: 100%;
 	text-align: center;
 }
+
+.main {
+	width: 100%;
+	margin: 0 1em;
+}
+
+.content {
+	max-width: 800px;
+	min-width: 300px;
+	margin: 0 auto;
+}
+
+#butlearn {
+	width: 7em;
+}

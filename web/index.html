@@ -18,38 +18,83 @@
 		crossorigin="anonymous"></script></head>
 	<!-- Custom styles -->
 	<link rel="stylesheet" href="style.css">
-<body>
-	<nav class="navbar navbar-inverse navbar-static-top">
-		<div class="container-fluid">
-			<div class="navbar-header">
-				<a class="navbar-brand" href="#">Neural Networks</a>
-			</div>
-		</div>
-	</nav>
 
-	<div class="well" style="margin: 1em">
+<body>
+
+<nav class="navbar navbar-inverse navbar-static-top">
+	<div class="container-fluid">
+		<div class="navbar-header">
+			<a class="navbar-brand" href="#">Neural Network</a>
+		</div>
+	</div>
+</nav>
+
+<div class="main">
+	<div class="content">
 		<form class="form-inline">
 			<fieldset>
 				<legend>Architecture</legend>
 				<div class="form-group">
 					<label for="ninputs">Number of inputs:</label>
-					<input type="number" min="1" max="1000" class="form-control" id="nimputs">
-				</div>
-				<div class="form-group">
-					<label for="noutputs">Number of outputs:</label>
-					<input type="number" min="1" max="1000" class="form-control" id="noutputs">
+					<input id="nimputs" value="3"
+						type="number" min="1" max="1000" step="1" class="form-control">
 				</div>
 				<div class="form-group">
 					<label for="nhidden">Neurons in hidden layer:</label>
-					<input type="number" min="1" max="1000" class="form-control" id="noutputs">
+					<input id="nhidden" value="4"
+						type="number" min="1" max="1000" step="1" class="form-control">
+				</div>
+				<div class="form-group">
+					<label for="noutputs">Number of outputs:</label>
+					<input id="noutputs" value="3"
+						type="number" min="1" max="1000" step="1" class="form-control">
 				</div>
 			</fieldset>
+		</form>
 
+		<form class="form-inline">
 			<fieldset>
 				<legend>Learn data</legend>
+				<div class="form-group">
+					<label for="maxerror">Acceptable error:</label>
+					<input id="maxerror" value="0.01"
+						type="number" min="0" max="1000000" class="form-control">
+				</div>
+				<div class="form-group">
+					<label for="maxiters">Maximum iterations:</label>
+					<input id="maxiters" value="1000"
+						type="number" min="1" max="999999999" step="1" class="form-control">
+				</div>
+				<div class="form-group">
+					<label for="lsample">Learn data line format:</label>
+					<input id="lsample" value="in1 in2 in3 / out1 out2 out3"
+						type="text" class="form-control" readonly size="30">
+				</div>
+				<br>
+				<div class="form-group" style="width: 100%; padding-right: 1em">
+					<label for="ldata">Learn data lines:</label><br>
+					<textarea id="ldata" style="width: 100%"
+						rows="5" class="form-control"></textarea>
+				</div>
+				<p id="status"></p>
+				<div class="form-group">
+					<button id="butlearn"
+						type="button" class="btn btn-primary">Learn</button>
+				</div>
+				<div class="form-group">
+					<label for="liters">Learn iterations:</label>
+					<input id="liters"
+						type="text" class="form-control" readonly size="6">
+				</div>
+				<div class="form-group">
+					<label for="error">Actual error:</label>
+					<input id="error"
+						type="text" class="form-control" readonly size="9">
+				</div>
 			</fieldset>
 		</form>
 	</div>
+</div>
 
 </body>
 
