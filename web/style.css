@@ -1,0 +1,15 @@
+.form-inline .form-group {
+	margin-left: 1em;
+	margin-bottom: 1em;
+}
+
+.navbar-header {
+	width: 100%;
+}
+
+.navbar-brand {
+	color: white !important;
+	font-size: 150%;
+	width: 100%;
+	text-align: center;
+}

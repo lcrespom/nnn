@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width">
+	<title>Neural Networks</title>
+	<!-- jQuery -->
+	<script src="https://code.jquery.com/jquery-3.1.0.js"></script>
+	<!-- Bootstrap: Latest compiled and minified CSS -->
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"
+		crossorigin="anonymous">
+	<!-- Bootstrap: Optional theme -->
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp"
+		crossorigin="anonymous">
+	<!-- Bootstrap: Latest compiled and minified JavaScript -->
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+		crossorigin="anonymous"></script></head>
+	<!-- Custom styles -->
+	<link rel="stylesheet" href="style.css">
+<body>
+	<nav class="navbar navbar-inverse navbar-static-top">
+		<div class="container-fluid">
+			<div class="navbar-header">
+				<a class="navbar-brand" href="#">Neural Networks</a>
+			</div>
+		</div>
+	</nav>
+
+	<div class="well" style="margin: 1em">
+		<form class="form-inline">
+			<fieldset>
+				<legend>Architecture</legend>
+				<div class="form-group">
+					<label for="ninputs">Number of inputs:</label>
+					<input type="number" min="1" max="1000" class="form-control" id="nimputs">
+				</div>
+				<div class="form-group">
+					<label for="noutputs">Number of outputs:</label>
+					<input type="number" min="1" max="1000" class="form-control" id="noutputs">
+				</div>
+				<div class="form-group">
+					<label for="nhidden">Neurons in hidden layer:</label>
+					<input type="number" min="1" max="1000" class="form-control" id="noutputs">
+				</div>
+			</fieldset>
+
+			<fieldset>
+				<legend>Learn data</legend>
+			</fieldset>
+		</form>
+	</div>
+
+</body>
+
+</html>
