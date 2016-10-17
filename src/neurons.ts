@@ -58,8 +58,6 @@ export class NeuralNetwork {
 	// -------------------- Forward propagation --------------------
 
 	forwardNeuron(neuron: Neuron, inputs: number[]): number {
-		if (inputs.length != neuron.weights.length)
-			throw new Error(`Invalid size of input array: expecting ${neuron.weights.length}, got ${inputs.length}`);
 		let weightedSum = inputs.reduce(
 			(accum, input, i) => accum + input * neuron.weights[i], 0);
 		neuron.output = this.activationFunc(weightedSum);
@@ -81,42 +79,28 @@ export class NeuralNetwork {
 
 	// -------------------- Back propagation --------------------
 
-	backPropagate(inputs: number[], targets: number[]): void {
-		// Adjust weights for output layer
-		for (let l = this.layers.length - 1; l >= 0; l++) {
-			let layer = this.layers[l];
-			let prevLayerOuts = this.addBias(l > 0 ?
-				this.layers[l - 1].map(neuron => neuron.output) : inputs);
-			let prevLayerErrors = new Array(prevLayerOuts.length).fill(0);
-			for (let i = 0; i < layer.length; i++) {
-				this.backPropagateNeuron(layer[i], error, prevLayerOuts, prevLayerErrors);
-			}
-		}
-
-		let hiddenErrors: number[] = [];
-		for (let i = 0; i < this.hiddenLayer.length; i++) hiddenErrors.push(0);
-		for (let i = 0; i < this.outputLayer.length; i++)
-			this.backPropagateOutNeuron(
-				this.outputLayer[i], targets[i], this.addBias(hiddenOuts), hiddenErrors);
-		// Adjust weights for hidden layer
-		for (let i = 0; i < this.hiddenLayer.length; i++)
-			this.backPropagateHiddenNeuron(
-				this.hiddenLayer[i], hiddenErrors[i], this.addBias(inputs));
-	}
-
-	backPropagateOutNeuron(neuron: Neuron, target: number,
+	backPropagateNeuron(neuron: Neuron, error: number,
 		prevLayerOuts: number[], prevLayerErrors: number[]): void {
-		let delta = (target - neuron.output) * neuron.output * (1 - neuron.output);
+		let delta = error * neuron.output * (1 - neuron.output);
 		for (let j = 0; j < neuron.weights.length; j++) {
 			prevLayerErrors[j] += delta * neuron.weights[j];
 			neuron.weights[j] += this.epsilon * delta * prevLayerOuts[j];
 		}
 	}
 
-	backPropagateHiddenNeuron(neuron: Neuron, error: number, inputs: number[]): void {
-		let delta = error * neuron.output * (1 - neuron.output);
-		for (let j = 0; j < neuron.weights.length; j++)
-			neuron.weights[j] += this.epsilon * delta * inputs[j];
+	backPropagate(inputs: number[], targets: number[]): void {
+		let outputLayer = this.layers[this.layers.length - 1];
+		let errors = outputLayer.map((neuron, i) => targets[i] - neuron.output);
+		for (let l = this.layers.length - 1; l >= 0; l--) {
+			let layer = this.layers[l];
+			let prevLayerOuts = this.addBias(l > 0 ?
+				this.layers[l - 1].map(neuron => neuron.output) : inputs);
+			let prevLayerErrors = this.fillArray(prevLayerOuts.length, 0);
+			for (let i = 0; i < layer.length; i++) {
+				this.backPropagateNeuron(layer[i], errors[i], prevLayerOuts, prevLayerErrors);
+			}
+			errors = prevLayerErrors;
+		}
 	}
 
 	// -------------------- Iterative learning --------------------
@@ -157,6 +141,12 @@ export class NeuralNetwork {
 	reportLearn(iteration, totalError) {
 		if (iteration % 100 == 0)
 			console.log(`Learn iteration ${iteration} - error: ${totalError}`);
+	}
+
+	fillArray<T>(len: number, v: T): T[] {
+		let a = new Array(len);
+		for (let i = 0; i < a.length; i++) a[i] = v;
+		return a;
 	}
 
 }

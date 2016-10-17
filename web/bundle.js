@@ -12,23 +12,27 @@ var Neuron = (function () {
 }());
 exports.Neuron = Neuron;
 var NeuralNetwork = (function () {
-    function NeuralNetwork(numInputs, numHidden, numOutputs) {
+    function NeuralNetwork(numInputs, layerSizes) {
         this.numInputs = numInputs;
-        this.numHidden = numHidden;
-        this.numOutputs = numOutputs;
+        this.layerSizes = layerSizes;
         // Initialize default params
         this.activationFunc = DEFAULT_ACTIVATION_FUNCTION;
         this.epsilon = 0.5;
-        this.acceptableError = 0.1;
+        this.acceptableError = 0.01;
         this.maxLearnIterations = 1000;
         // Initialize layers
-        this.hiddenLayer = [];
-        for (var i = 0; i < numHidden; i++)
-            this.hiddenLayer.push(new Neuron(this.numInputs + 1));
-        this.outputLayer = [];
-        for (var i = 0; i < numOutputs; i++)
-            this.outputLayer.push(new Neuron(this.numHidden + 1));
+        this.layers = [];
+        for (var i = 0; i < layerSizes.length; i++) {
+            var numWeights = (i == 0 ? numInputs : layerSizes[i - 1]) + 1;
+            this.layers.push(this.createLayer(layerSizes[i], numWeights));
+        }
     }
+    NeuralNetwork.prototype.createLayer = function (size, weights) {
+        var layer = [];
+        for (var i = 0; i < size; i++)
+            layer.push(new Neuron(weights));
+        return layer;
+    };
     // -------------------- Forward propagation --------------------
     NeuralNetwork.prototype.forwardNeuron = function (neuron, inputs) {
         if (inputs.length != neuron.weights.length)
@@ -39,41 +43,38 @@ var NeuralNetwork = (function () {
     };
     NeuralNetwork.prototype.forward = function (inputs) {
         var _this = this;
-        var hlValues = [];
-        var outValues = [];
-        this.hiddenLayer.forEach(function (neuron) {
-            return hlValues.push(_this.forwardNeuron(neuron, _this.addBias(inputs)));
+        var layerOut = [];
+        var prevLayerOut = this.addBias(inputs);
+        this.layers.forEach(function (layer) {
+            layerOut = [];
+            layer.forEach(function (neuron) {
+                return layerOut.push(_this.forwardNeuron(neuron, prevLayerOut));
+            });
+            prevLayerOut = _this.addBias(layerOut);
         });
-        hlValues.push(1); // Add bias
-        this.outputLayer.forEach(function (neuron) {
-            return outValues.push(_this.forwardNeuron(neuron, hlValues));
-        });
-        return outValues;
+        return layerOut;
     };
     // -------------------- Back propagation --------------------
     NeuralNetwork.prototype.backPropagate = function (inputs, targets) {
-        // Adjust weights for output layer
-        var hiddenOuts = this.hiddenLayer.map(function (neuron) { return neuron.output; });
-        var hiddenErrors = [];
-        for (var i = 0; i < this.hiddenLayer.length; i++)
-            hiddenErrors.push(0);
-        for (var i = 0; i < this.outputLayer.length; i++)
-            this.backPropagateOutNeuron(this.outputLayer[i], targets[i], this.addBias(hiddenOuts), hiddenErrors);
-        // Adjust weights for hidden layer
-        for (var i = 0; i < this.hiddenLayer.length; i++)
-            this.backPropagateHiddenNeuron(this.hiddenLayer[i], hiddenErrors[i], this.addBias(inputs));
+        var outputLayer = this.layers[this.layers.length - 1];
+        var errors = outputLayer.map(function (neuron, i) { return targets[i] - neuron.output; });
+        for (var l = this.layers.length - 1; l >= 0; l--) {
+            var layer = this.layers[l];
+            var prevLayerOuts = this.addBias(l > 0 ?
+                this.layers[l - 1].map(function (neuron) { return neuron.output; }) : inputs);
+            var prevLayerErrors = this.fillArray(prevLayerOuts.length, 0);
+            for (var i = 0; i < layer.length; i++) {
+                this.backPropagateNeuron(layer[i], errors[i], prevLayerOuts, prevLayerErrors);
+            }
+            errors = prevLayerErrors;
+        }
     };
-    NeuralNetwork.prototype.backPropagateOutNeuron = function (neuron, target, prevLayerOuts, prevLayerErrors) {
-        var delta = (target - neuron.output) * neuron.output * (1 - neuron.output);
+    NeuralNetwork.prototype.backPropagateNeuron = function (neuron, error, prevLayerOuts, prevLayerErrors) {
+        var delta = error * neuron.output * (1 - neuron.output);
         for (var j = 0; j < neuron.weights.length; j++) {
             prevLayerErrors[j] += delta * neuron.weights[j];
             neuron.weights[j] += this.epsilon * delta * prevLayerOuts[j];
         }
-    };
-    NeuralNetwork.prototype.backPropagateHiddenNeuron = function (neuron, error, inputs) {
-        var delta = error * neuron.output * (1 - neuron.output);
-        for (var j = 0; j < neuron.weights.length; j++)
-            neuron.weights[j] += this.epsilon * delta * inputs[j];
     };
     // -------------------- Iterative learning --------------------
     NeuralNetwork.prototype.learn = function (examples) {
@@ -108,6 +109,12 @@ var NeuralNetwork = (function () {
         if (iteration % 100 == 0)
             console.log("Learn iteration " + iteration + " - error: " + totalError);
     };
+    NeuralNetwork.prototype.fillArray = function (len, v) {
+        var a = new Array(len);
+        for (var i = 0; i < a.length; i++)
+            a[i] = v;
+        return a;
+    };
     return NeuralNetwork;
 }());
 exports.NeuralNetwork = NeuralNetwork;
@@ -120,6 +127,7 @@ function sigmoid(x) {
     else
         return 1.0 / (1.0 + Math.exp(-x));
 }
+
 },{}],2:[function(require,module,exports){
 "use strict";
 var neurons_1 = require('./neurons');
@@ -132,7 +140,7 @@ $(function () {
     $('#butlearn').click(function (_) {
         $('#butlearn').text('Learning...');
         var formData = getFormData();
-        nn = new neurons_1.NeuralNetwork(+formData.numInputs, +formData.numHidden, +formData.numOutputs);
+        nn = new neurons_1.NeuralNetwork(+formData.numInputs, [+formData.numHidden, +formData.numOutputs]);
         nn.acceptableError = +formData.maxError;
         nn.maxLearnIterations = +formData.maxIterations;
         nn.epsilon = +formData.epsilon;
@@ -217,5 +225,6 @@ function fmtNum(n, len) {
     if (len === void 0) { len = 5; }
     return n.toString().substr(0, len);
 }
+
 },{"./neurons":1}]},{},[2])
 //# sourceMappingURL=bundle.js.map

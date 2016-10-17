@@ -10,7 +10,7 @@ $(function() {
 	$('#butlearn').click(_ => {
 		$('#butlearn').text('Learning...');
 		let formData = getFormData();
-		nn = new NeuralNetwork(+formData.numInputs, +formData.numHidden, +formData.numOutputs);
+		nn = new NeuralNetwork(+formData.numInputs, [+formData.numHidden, +formData.numOutputs]);
 		nn.acceptableError = +formData.maxError;
 		nn.maxLearnIterations = +formData.maxIterations;
 		nn.epsilon = +formData.epsilon;
