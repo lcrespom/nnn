@@ -108,13 +108,13 @@ export class NeuralNetwork {
 
 	learn(examples: Example[]): boolean {
 		this.learnIteration = 0;
-		this.learnError = 0;
 		do {
+			this.learnError = 0;
 			for (let i = 0; i < examples.length; i++) {
 				let actualOuts = this.forward(examples[i].inputs);
 				let expectedOuts = examples[i].outputs;
 				this.backPropagate(examples[i].inputs, expectedOuts);
-				this.learnError = this.totalError(actualOuts, expectedOuts);
+				this.learnError += this.sampleError(actualOuts, expectedOuts);
 			}
 			this.learnIteration++;
 			this.reportLearn(this.learnIteration, this.learnError);
@@ -123,7 +123,7 @@ export class NeuralNetwork {
 		return this.learnError <= this.acceptableError;
 	}
 
-	totalError(actualOuts: number[], expectedOuts: number[]): number {
+	sampleError(actualOuts: number[], expectedOuts: number[]): number {
 		const square = x => x * x;
 		let sum = actualOuts.reduce(
 			(accum, actualOut, i) => accum + square(actualOut - expectedOuts[i]), 0);

@@ -21,7 +21,8 @@ function learnAdd1() {
 		{ inputs: [1, 1, 1], outputs: [0, 0, 0] }
 	];
 	let nn = new NeuralNetwork(3, 4, 3);
-	nn.maxLearnIterations = +process.argv[2] || 10;
+	nn.maxLearnIterations = +process.argv[2] || 100;
+	nn.acceptableError = +process.argv[3] || 0.01;
 	let success = nn.learn(examples);
 	if (success)
 		console.log('Learning success');
