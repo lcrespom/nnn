@@ -1,6 +1,7 @@
 const DEFAULT_ACTIVATION_FUNCTION = sigmoid;
 
 type ActivationFunction = (number) => number;
+type NeuronLayer = Neuron[];
 
 
 export interface Example {
@@ -23,8 +24,7 @@ export class Neuron {
 
 
 export class NeuralNetwork {
-	hiddenLayer: Neuron[];
-	outputLayer: Neuron[];
+	layers: NeuronLayer[];
 	// Tunable parameters
 	activationFunc: ActivationFunction;
 	epsilon: number;
@@ -34,19 +34,25 @@ export class NeuralNetwork {
 	learnIteration: number;
 	learnError: number;
 
-	constructor(public numInputs: number, public numHidden: number, public numOutputs: number) {
+	constructor(public numInputs: number, public layerSizes: number[]) {
 		// Initialize default params
 		this.activationFunc = DEFAULT_ACTIVATION_FUNCTION;
 		this.epsilon = 0.5;
 		this.acceptableError = 0.01;
 		this.maxLearnIterations = 1000;
 		// Initialize layers
-		this.hiddenLayer = [];
-		for (let i = 0; i < numHidden; i++)
-			this.hiddenLayer.push(new Neuron(this.numInputs + 1));
-		this.outputLayer = [];
-		for (let i = 0; i < numOutputs; i++)
-			this.outputLayer.push(new Neuron(this.numHidden + 1));
+		this.layers = [];
+		for (let i = 0; i < layerSizes.length; i++) {
+			let numWeights = (i == 0 ? numInputs : layerSizes[i - 1]) + 1;
+			this.layers.push(this.createLayer(layerSizes[i], numWeights));
+		}
+	}
+
+	createLayer(size: number, weights: number): NeuronLayer {
+		let layer: NeuronLayer = [];
+		for (let i = 0; i < size; i++)
+			layer.push(new Neuron(weights));
+		return layer;
 	}
 
 	// -------------------- Forward propagation --------------------
@@ -61,23 +67,30 @@ export class NeuralNetwork {
 	}
 
 	forward(inputs: number[]): number[] {
-		let hlValues: number[] = [];
-		let outValues: number[] = [];
-		this.hiddenLayer.forEach(neuron =>
-			hlValues.push(this.forwardNeuron(neuron, this.addBias(inputs)))
-		);
-		hlValues.push(1);		// Add bias
-		this.outputLayer.forEach(neuron =>
-			outValues.push(this.forwardNeuron(neuron, hlValues))
-		);
-		return outValues;
+		let layerOut: number[] = [];
+		let prevLayerOut = this.addBias(inputs);
+		this.layers.forEach(layer => {
+			layerOut = [];
+			layer.forEach(neuron =>
+				layerOut.push(this.forwardNeuron(neuron, prevLayerOut))
+			);
+			prevLayerOut = this.addBias(layerOut);
+		});
+		return layerOut;
 	}
 
 	// -------------------- Back propagation --------------------
 
 	backPropagate(inputs: number[], targets: number[]): void {
 		// Adjust weights for output layer
-		let hiddenOuts = this.hiddenLayer.map(neuron => neuron.output);
+		for (let l = this.layers.length - 1; l >= 0; l++) {
+			let layer = this.layers[l];
+			let prevLayerOuts = this.addBias(l > 0 ?
+				this.layers[l - 1].map(neuron => neuron.output) : inputs);
+			for (let i = 0; i < layer.length; i++) {
+				this.backPropagateNeuron(layer[i], error, prevLayerOuts, prevLayerErrors));
+			}
+		}
 		let hiddenErrors: number[] = [];
 		for (let i = 0; i < this.hiddenLayer.length; i++) hiddenErrors.push(0);
 		for (let i = 0; i < this.outputLayer.length; i++)
