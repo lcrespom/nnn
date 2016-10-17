@@ -38,7 +38,7 @@ export class NeuralNetwork {
 		// Initialize default params
 		this.activationFunc = DEFAULT_ACTIVATION_FUNCTION;
 		this.epsilon = 0.5;
-		this.acceptableError = 0.001;
+		this.acceptableError = 0.1;
 		this.maxLearnIterations = 1000;
 		// Initialize layers
 		this.hiddenLayer = [];

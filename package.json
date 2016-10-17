@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
-    "browserify": "browserify -d src/nnn-web.ts -p [ tsify ] > web/bundle.js",
+    "browserify": "browserify -d src/nnn-web.ts -p [ tsify --target=ES5 ] | exorcist web/bundle.js.map > web/bundle.js",
     "start": "node js/nnn",
     "serve": "http-server web -c-1"
   },
@@ -28,6 +28,7 @@
     "@types/jquery": "^2.0.33",
     "@types/node": "^6.0.45",
     "browserify": "^13.1.0",
+    "exorcist": "^0.4.0",
     "http-server": "^0.9.0",
     "tsify": "^2.0.2",
     "tslint": "^3.15.1",

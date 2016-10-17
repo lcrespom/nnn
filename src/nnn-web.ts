@@ -11,8 +11,9 @@ $(function() {
 		$('#butlearn').text('Learning...');
 		let formData = getFormData();
 		nn = new NeuralNetwork(+formData.numInputs, +formData.numHidden, +formData.numOutputs);
-		nn.acceptableError = formData.maxError;
-		nn.maxLearnIterations = formData.maxIterations;
+		nn.acceptableError = +formData.maxError;
+		nn.maxLearnIterations = +formData.maxIterations;
+		nn.epsilon = +formData.epsilon;
 		let examples = parseLearnLines(formData.learnLines, +formData.numInputs, +formData.numOutputs);
 		setTimeout(() => {
 			nn.learn(examples);
@@ -42,6 +43,7 @@ function getFormData() {
 		numHidden: $('#nhidden').val(),
 		maxError: $('#maxerror').val(),
 		maxIterations: $('#maxiters').val(),
+		epsilon: $('#epsilon').val(),
 		learnLines: $('#ldata').val(),
 		testLines: $('#tdata').val()
 	};

@@ -60,12 +60,17 @@
 				<div class="form-group">
 					<label for="maxerror">Acceptable error:</label>
 					<input id="maxerror" value="0.1"
-						type="number" min="0" max="1000000" class="form-control">
+						type="number" min="0" max="100000" class="form-control">
 				</div>
 				<div class="form-group">
 					<label for="maxiters">Maximum iterations:</label>
 					<input id="maxiters" value="10000"
-						type="number" min="1" max="999999999" step="1" class="form-control">
+						type="number" min="1" max="99999999" step="1" class="form-control">
+				</div>
+				<div class="form-group">
+					<label for="maxiters">Epsilon:</label>
+					<input id="epsilon" value="0.5"
+						type="number" min="0" max="9999" class="form-control">
 				</div>
 				<div class="form-group">
 					<label for="lsample">Learn data line format:</label>
