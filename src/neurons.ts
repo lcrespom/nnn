@@ -117,6 +117,7 @@ export class NeuralNetwork {
 				this.learnError += this.sampleError(actualOuts, expectedOuts);
 			}
 			this.learnIteration++;
+			this.learnError = this.learnError / examples.length;
 			this.reportLearn(this.learnIteration, this.learnError);
 		} while (this.learnIteration < this.maxLearnIterations
 			&& this.learnError > this.acceptableError);
