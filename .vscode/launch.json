@@ -7,7 +7,7 @@
 			"request": "launch",
 			"program": "${workspaceRoot}/src/nnn.ts",
 			"stopOnEntry": false,
-			"args": [],
+			"args": [ "5000" ],
 			"cwd": "${workspaceRoot}",
 			"preLaunchTask": null,
 			"runtimeExecutable": null,
