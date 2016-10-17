@@ -87,10 +87,13 @@ export class NeuralNetwork {
 			let layer = this.layers[l];
 			let prevLayerOuts = this.addBias(l > 0 ?
 				this.layers[l - 1].map(neuron => neuron.output) : inputs);
+			let prevLayerErrors: number[] = [];
+			prevLayerOuts.forEach(_ => prevLayerErrors.push(0));
 			for (let i = 0; i < layer.length; i++) {
-				this.backPropagateNeuron(layer[i], error, prevLayerOuts, prevLayerErrors));
+				this.backPropagateNeuron(layer[i], error, prevLayerOuts, prevLayerErrors);
 			}
 		}
+
 		let hiddenErrors: number[] = [];
 		for (let i = 0; i < this.hiddenLayer.length; i++) hiddenErrors.push(0);
 		for (let i = 0; i < this.outputLayer.length; i++)
