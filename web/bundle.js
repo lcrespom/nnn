@@ -170,7 +170,7 @@ function getFormData() {
 }
 function parseLearnLines(allLines, numInputs, numOutputs) {
     var examples = [];
-    var lines = allLines.split('\n').filter(function (line) { return line.length > 0; });
+    var lines = parseDataLines(allLines);
     lines.forEach(function (line, i) {
         var example = parseExample(line);
         //TODO validate line by checking:
@@ -186,23 +186,31 @@ function parseExample(line) {
     var inout = line.split('/');
     if (inout.length < 2)
         return null;
-    var str2numarr = function (str) { return str.split(' ').filter(function (s) { return s.length > 0; }).map(function (s) { return parseFloat(s); }); };
-    var inputs = str2numarr(inout[0]);
-    var outputs = str2numarr(inout[1]);
+    var inputs = parseNumbers(inout[0]);
+    var outputs = parseNumbers(inout[1]);
     return { inputs: inputs, outputs: outputs };
 }
 function parseTestLines(allLines, numInputs) {
     var tests;
     tests = [];
-    var lines = allLines.split('\n').filter(function (line) { return line.length > 0; });
+    var lines = parseDataLines(allLines);
     lines.forEach(function (line, i) {
-        var inputs = line.split(' ').filter(function (s) { return s.length > 0; }).map(function (s) { return parseFloat(s); });
+        var inputs = parseNumbers(line);
         //TODO validate line by checking:
         //	- if the number of inputs is invalid, then some values are missing or exceeding
         //	- if some value is NaN, then there are invalid numbers
         tests.push(inputs);
     });
     return tests;
+}
+function parseDataLines(allLines) {
+    return allLines.split('\n').filter(function (line) {
+        line = line.trim();
+        return line.length > 0 && line[0] != '#';
+    });
+}
+function parseNumbers(line) {
+    return line.split(' ').filter(function (s) { return s.length > 0; }).map(function (s) { return parseFloat(s); });
 }
 function fmtNum(n, len) {
     if (len === void 0) { len = 5; }

@@ -51,7 +51,7 @@ function getFormData() {
 
 function parseLearnLines(allLines: string, numInputs: number, numOutputs: number): Example[] {
 	let examples: Example[] = [];
-	let lines = allLines.split('\n').filter(line => line.length > 0);
+	let lines = parseDataLines(allLines);
 	lines.forEach((line, i) => {
 		let example = parseExample(line);
 		//TODO validate line by checking:
@@ -66,24 +66,34 @@ function parseLearnLines(allLines: string, numInputs: number, numOutputs: number
 function parseExample(line: string): Example | null {
 	let inout = line.split('/');
 	if (inout.length < 2) return null;
-	let str2numarr = str => str.split(' ').filter(s => s.length > 0).map(s => parseFloat(s));
-	let inputs = str2numarr(inout[0]);
-	let outputs = str2numarr(inout[1]);
+	let inputs = parseNumbers(inout[0]);
+	let outputs = parseNumbers(inout[1]);
 	return { inputs, outputs };
 }
 
 function parseTestLines(allLines: string, numInputs: number): number[][] {
 	let tests: number[][];
 	tests = [];
-	let lines = allLines.split('\n').filter(line => line.length > 0);
+	let lines = parseDataLines(allLines);
 	lines.forEach((line, i) => {
-		let inputs = line.split(' ').filter(s => s.length > 0).map(s => parseFloat(s));
+		let inputs = parseNumbers(line);
 		//TODO validate line by checking:
 		//	- if the number of inputs is invalid, then some values are missing or exceeding
 		//	- if some value is NaN, then there are invalid numbers
 		tests.push(inputs);
 	});
 	return tests;
+}
+
+function parseDataLines(allLines: string): string[] {
+	return allLines.split('\n').filter(line => {
+		line = line.trim();
+		return line.length > 0 && line[0] != '#';
+	});
+}
+
+function parseNumbers(line: string): number[] {
+	return line.split(' ').filter(s => s.length > 0).map(s => parseFloat(s));
 }
 
 function fmtNum(n: number, len = 5): string {
