@@ -35,8 +35,6 @@ var NeuralNetwork = (function () {
     };
     // -------------------- Forward propagation --------------------
     NeuralNetwork.prototype.forwardNeuron = function (neuron, inputs) {
-        if (inputs.length != neuron.weights.length)
-            throw new Error("Invalid size of input array: expecting " + neuron.weights.length + ", got " + inputs.length);
         var weightedSum = inputs.reduce(function (accum, input, i) { return accum + input * neuron.weights[i]; }, 0);
         neuron.output = this.activationFunc(weightedSum);
         return neuron.output;
@@ -55,6 +53,13 @@ var NeuralNetwork = (function () {
         return layerOut;
     };
     // -------------------- Back propagation --------------------
+    NeuralNetwork.prototype.backPropagateNeuron = function (neuron, error, prevLayerOuts, prevLayerErrors) {
+        var delta = error * neuron.output * (1 - neuron.output);
+        for (var j = 0; j < neuron.weights.length; j++) {
+            prevLayerErrors[j] += delta * neuron.weights[j];
+            neuron.weights[j] += this.epsilon * delta * prevLayerOuts[j];
+        }
+    };
     NeuralNetwork.prototype.backPropagate = function (inputs, targets) {
         var outputLayer = this.layers[this.layers.length - 1];
         var errors = outputLayer.map(function (neuron, i) { return targets[i] - neuron.output; });
@@ -67,13 +72,6 @@ var NeuralNetwork = (function () {
                 this.backPropagateNeuron(layer[i], errors[i], prevLayerOuts, prevLayerErrors);
             }
             errors = prevLayerErrors;
-        }
-    };
-    NeuralNetwork.prototype.backPropagateNeuron = function (neuron, error, prevLayerOuts, prevLayerErrors) {
-        var delta = error * neuron.output * (1 - neuron.output);
-        for (var j = 0; j < neuron.weights.length; j++) {
-            prevLayerErrors[j] += delta * neuron.weights[j];
-            neuron.weights[j] += this.epsilon * delta * prevLayerOuts[j];
         }
     };
     // -------------------- Iterative learning --------------------
@@ -137,10 +135,13 @@ $(function () {
     // 	let formData = getFormData();
     // 	//TODO: validate and activate buttons
     // });
+    // -------------------- Handle click on "Learn" button --------------------
     $('#butlearn').click(function (_) {
         $('#butlearn').text('Learning...');
         var formData = getFormData();
-        nn = new neurons_1.NeuralNetwork(+formData.numInputs, [+formData.numHidden, +formData.numOutputs]);
+        var numLayers = parseNumbers(formData.numHidden);
+        numLayers.push(+formData.numOutputs);
+        nn = new neurons_1.NeuralNetwork(+formData.numInputs, numLayers);
         nn.acceptableError = +formData.maxError;
         nn.maxLearnIterations = +formData.maxIterations;
         nn.epsilon = +formData.epsilon;
@@ -154,6 +155,7 @@ $(function () {
             $('#buttest').attr('disabled', false);
         }, 10);
     });
+    // -------------------- Handle click on "Test" button --------------------
     $('#buttest').click(function (_) {
         var formData = getFormData();
         var tests = parseTestLines(formData.testLines, nn.numInputs);
@@ -164,6 +166,8 @@ $(function () {
             .join('\n');
         $('#tout').text(strResult);
     });
+    // -------------------- Enable bootstrap-styled tooltips --------------------
+    $('[data-toggle="tooltip"]').tooltip();
 });
 function getFormData() {
     return {

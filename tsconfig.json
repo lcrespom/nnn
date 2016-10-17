@@ -5,7 +5,7 @@
 		"sourceMap": true,
 		"outDir": "js",
 		"types": [
-			"node", "jquery"
+			"node", "jquery", "bootstrap"
 		],
 		"strictNullChecks": true
 	},

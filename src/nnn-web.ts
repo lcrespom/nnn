@@ -7,10 +7,13 @@ $(function() {
 	// 	let formData = getFormData();
 	// 	//TODO: validate and activate buttons
 	// });
+	// -------------------- Handle click on "Learn" button --------------------
 	$('#butlearn').click(_ => {
 		$('#butlearn').text('Learning...');
 		let formData = getFormData();
-		nn = new NeuralNetwork(+formData.numInputs, [+formData.numHidden, +formData.numOutputs]);
+		let numLayers = parseNumbers(formData.numHidden);
+		numLayers.push(+formData.numOutputs);
+		nn = new NeuralNetwork(+formData.numInputs, numLayers);
 		nn.acceptableError = +formData.maxError;
 		nn.maxLearnIterations = +formData.maxIterations;
 		nn.epsilon = +formData.epsilon;
@@ -24,6 +27,7 @@ $(function() {
 			$('#buttest').attr('disabled', <any>false);
 		}, 10);
 	});
+	// -------------------- Handle click on "Test" button --------------------
 	$('#buttest').click(_ => {
 		let formData = getFormData();
 		let tests = parseTestLines(formData.testLines, nn.numInputs);
@@ -34,6 +38,8 @@ $(function() {
 			.join('\n');
 		$('#tout').text(strResult);
 	});
+	// -------------------- Enable bootstrap-styled tooltips --------------------
+	$('[data-toggle="tooltip"]').tooltip();
 });
 
 function getFormData() {

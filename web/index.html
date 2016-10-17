@@ -42,9 +42,13 @@
 						type="number" min="1" max="1000" step="1" class="form-control">
 				</div>
 				<div class="form-group">
-					<label for="nhidden">Neurons in hidden layer:</label>
+					<label for="nhidden" data-toggle="tooltip" data-placement="bottom"
+						title="Multiple hidden layers can be specified
+						by providing a list of numbers separated by spaces, e.g. '4 3 4'">
+						Neurons in hidden layer(s):
+					</label>
 					<input id="nhidden" value="4"
-						type="number" min="1" max="1000" step="1" class="form-control">
+						type="text" size="8" class="form-control">
 				</div>
 				<div class="form-group">
 					<label for="noutputs">Number of outputs:</label>

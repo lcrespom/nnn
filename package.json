@@ -25,6 +25,7 @@
   },
   "homepage": "https://github.com/lcrespom/nnn#readme",
   "devDependencies": {
+    "@types/bootstrap": "^3.3.32",
     "@types/jquery": "^2.0.33",
     "@types/node": "^6.0.45",
     "browserify": "^13.1.0",
