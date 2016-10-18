@@ -252,6 +252,22 @@ var NeuralNetworkDiagram = (function () {
         this.drawNodes();
     };
     NeuralNetworkDiagram.prototype.drawWeights = function () {
+        for (var i = 0; i < this.net.layers.length; i++)
+            for (var j = 0; j < this.net.layers[i].length; j++)
+                this.drawNodeWeights(i, j);
+    };
+    NeuralNetworkDiagram.prototype.drawNodeWeights = function (i, j) {
+        if (!this.ctx)
+            return;
+        var neuron = this.net.layers[i][j];
+        for (var w = 0; w < neuron.weights.length; w++) {
+            var _a = this.getCenter(i, w), x1 = _a[0], y1 = _a[1];
+            var _b = this.getCenter(i + 1, j), x2 = _b[0], y2 = _b[1];
+            this.ctx.strokeStyle = 'black'; //TODO match weight to darkness
+            this.ctx.moveTo(x1, y1);
+            this.ctx.lineTo(x2, y2);
+            this.ctx.stroke();
+        }
     };
     NeuralNetworkDiagram.prototype.drawNodes = function () {
         if (!this.ctx)

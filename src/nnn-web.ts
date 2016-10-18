@@ -136,6 +136,22 @@ class NeuralNetworkDiagram {
 	}
 
 	drawWeights() {
+		for (let i = 0; i < this.net.layers.length; i++)
+			for (let j = 0; j < this.net.layers[i].length; j++)
+				this.drawNodeWeights(i, j);
+	}
+
+	drawNodeWeights(i: number, j: number) {
+		if (!this.ctx) return;
+		let neuron = this.net.layers[i][j];
+		for (let w = 0; w < neuron.weights.length; w++) {
+			let [x1, y1] = this.getCenter(i, w);
+			let [x2, y2] = this.getCenter(i + 1, j);
+			this.ctx.strokeStyle = 'black';	//TODO match weight to darkness
+			this.ctx.moveTo(x1, y1);
+			this.ctx.lineTo(x2, y2);
+			this.ctx.stroke();
+		}
 	}
 
 	drawNodes() {
