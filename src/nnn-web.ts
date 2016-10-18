@@ -132,7 +132,7 @@ class NeuralNetworkDiagram {
 	constructor(public net: NeuralNetwork, public canvas: HTMLCanvasElement) {
 		let ctx = canvas.getContext('2d');
 		if (ctx) this.ctx = ctx;
-		this.numCols = this.net.layerSizes.length + 1
+		this.numCols = this.net.layerSizes.length + 1;
 		let colW = this.canvas.width / this.numCols;
 		this.r = Math.min(20, colW / 4);
 	}
@@ -161,8 +161,7 @@ class NeuralNetworkDiagram {
 
 	drawNodeWeights(i: number, j: number, minW: number, maxW: number) {
 		let neuron = this.net.layers[i][j];
-		for (let w = 0; w < neuron.weights.length - 1; w++) {
-			//TODO add bias!!!
+		for (let w = 0; w < neuron.weights.length; w++) {
 			let nw = neuron.weights[w];
 			let div = nw < 0 ? minW : maxW;
 			let hue = nw < 0 ? 0 : 120;
@@ -184,10 +183,11 @@ class NeuralNetworkDiagram {
 	}
 
 	drawCol(col: number) {
-		let numRows = col == 0 ? nn.numInputs : this.net.layerSizes[col - 1];
+		let numRows = this.getNumRows(col);
+		let isOutput = this.isOutput(col);
 		for (let row = 0; row < numRows; row++) {
 			let isInput = col == 0;
-			let isBias = false;	//TODO draw bias
+			let isBias = !isOutput && row == numRows - 1;
 			let [x, y] = this.getCenter(col, row);
 			this.drawNode(x, y, this.r, isInput, isBias);
 		}
@@ -199,7 +199,7 @@ class NeuralNetworkDiagram {
 			this.ctx.fillStyle = '#2DD';
 		else
 			this.ctx.fillStyle = '#337AB7';
-		if (isInput) {
+		if (isInput || isBias) {
 			let x1 = x - r;
 			let y1 = y - r;
 			let dxy = r * 2;
@@ -217,11 +217,21 @@ class NeuralNetworkDiagram {
 	}
 
 	getCenter(col: number, row: number): [number, number] {
-		let numRows = col == 0 ? nn.numInputs : this.net.layerSizes[col - 1];
+		let numRows = this.getNumRows(col);
 		let colW = this.canvas.width / this.numCols;
 		let rowH = this.canvas.height / numRows;
 		let x = col * colW + colW / 2;
 		let y = row * rowH + rowH / 2;
 		return [x, y];
+	}
+
+	getNumRows(col: number): number {
+		let numRows = col == 0 ? nn.numInputs : this.net.layerSizes[col - 1];
+		if (!this.isOutput(col)) numRows++;
+		return numRows;
+	}
+
+	isOutput(col: number): boolean {
+		return col == this.net.layerSizes.length;
 	}
 }

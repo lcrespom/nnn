@@ -17,6 +17,5 @@ adjust the network parameters and provide learn and test data.
 	- Validation & error message reporting
 	- Report time spent learning
 	- Split learn loop into smaller loops, so the UI is updated while learning
-	- Draw diagram of NN
 	- Draw diagram of learning error curve
 	- Load/save network data: architecture, learned weights, etc.

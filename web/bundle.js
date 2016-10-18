@@ -281,8 +281,7 @@ var NeuralNetworkDiagram = (function () {
     };
     NeuralNetworkDiagram.prototype.drawNodeWeights = function (i, j, minW, maxW) {
         var neuron = this.net.layers[i][j];
-        for (var w = 0; w < neuron.weights.length - 1; w++) {
-            //TODO add bias!!!
+        for (var w = 0; w < neuron.weights.length; w++) {
             var nw = neuron.weights[w];
             var div = nw < 0 ? minW : maxW;
             var hue = nw < 0 ? 0 : 120;
@@ -302,10 +301,11 @@ var NeuralNetworkDiagram = (function () {
         }
     };
     NeuralNetworkDiagram.prototype.drawCol = function (col) {
-        var numRows = col == 0 ? nn.numInputs : this.net.layerSizes[col - 1];
+        var numRows = this.getNumRows(col);
+        var isOutput = this.isOutput(col);
         for (var row = 0; row < numRows; row++) {
             var isInput = col == 0;
-            var isBias = false; //TODO draw bias
+            var isBias = !isOutput && row == numRows - 1;
             var _a = this.getCenter(col, row), x = _a[0], y = _a[1];
             this.drawNode(x, y, this.r, isInput, isBias);
         }
@@ -316,7 +316,7 @@ var NeuralNetworkDiagram = (function () {
             this.ctx.fillStyle = '#2DD';
         else
             this.ctx.fillStyle = '#337AB7';
-        if (isInput) {
+        if (isInput || isBias) {
             var x1 = x - r;
             var y1 = y - r;
             var dxy = r * 2;
@@ -333,12 +333,21 @@ var NeuralNetworkDiagram = (function () {
         }
     };
     NeuralNetworkDiagram.prototype.getCenter = function (col, row) {
-        var numRows = col == 0 ? nn.numInputs : this.net.layerSizes[col - 1];
+        var numRows = this.getNumRows(col);
         var colW = this.canvas.width / this.numCols;
         var rowH = this.canvas.height / numRows;
         var x = col * colW + colW / 2;
         var y = row * rowH + rowH / 2;
         return [x, y];
+    };
+    NeuralNetworkDiagram.prototype.getNumRows = function (col) {
+        var numRows = col == 0 ? nn.numInputs : this.net.layerSizes[col - 1];
+        if (!this.isOutput(col))
+            numRows++;
+        return numRows;
+    };
+    NeuralNetworkDiagram.prototype.isOutput = function (col) {
+        return col == this.net.layerSizes.length;
     };
     return NeuralNetworkDiagram;
 }());
