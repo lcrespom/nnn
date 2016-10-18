@@ -119,35 +119,48 @@ function fmtNum(n: number, len = 5): string {
 // ------------------------- Diagram drawing -------------------------
 
 class NeuralNetworkDiagram {
-	ctx: CanvasRenderingContext2D | null;
+	ctx: CanvasRenderingContext2D;
 	r: number;
 	numCols: number;
 
 	constructor(public net: NeuralNetwork, public canvas: HTMLCanvasElement) {
-		this.ctx = canvas.getContext('2d');
+		let ctx = canvas.getContext('2d');
+		if (ctx) this.ctx = ctx;
 		this.numCols = this.net.layerSizes.length + 1
 		let colW = this.canvas.width / this.numCols;
 		this.r = Math.min(20, colW / 4);
 	}
 
 	draw() {
+		this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 		this.drawWeights();
 		this.drawNodes();
 	}
 
 	drawWeights() {
+		let minW = 0, maxW = 0;
+		this.net.layers.forEach(l => l.forEach(n => n.weights.forEach(w => {
+			if (w < minW) minW = w;
+			if (w > maxW) maxW = w;
+		})));
+		if (minW == 0) minW = 1;
+		if (maxW == 0) maxW = 1;
 		for (let i = 0; i < this.net.layers.length; i++)
 			for (let j = 0; j < this.net.layers[i].length; j++)
-				this.drawNodeWeights(i, j);
+				this.drawNodeWeights(i, j, minW, maxW);
 	}
 
-	drawNodeWeights(i: number, j: number) {
-		if (!this.ctx) return;
+	drawNodeWeights(i: number, j: number, minW: number, maxW: number) {
 		let neuron = this.net.layers[i][j];
-		for (let w = 0; w < neuron.weights.length; w++) {
+		for (let w = 0; w < neuron.weights.length - 1; w++) {
+			//TODO add bias!!!
 			let [x1, y1] = this.getCenter(i, w);
 			let [x2, y2] = this.getCenter(i + 1, j);
-			this.ctx.strokeStyle = 'black';	//TODO match weight to darkness
+			let nw = neuron.weights[w];
+			let div = nw < 0 ? minW : maxW;
+			nw = 100 - 100 * (nw / div);
+			this.ctx.strokeStyle = `rgb(${nw}%, ${nw}%, ${nw}%)`;
+			this.ctx.beginPath();
 			this.ctx.moveTo(x1, y1);
 			this.ctx.lineTo(x2, y2);
 			this.ctx.stroke();
@@ -155,8 +168,6 @@ class NeuralNetworkDiagram {
 	}
 
 	drawNodes() {
-		if (!this.ctx) return;
-		this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 		for (let col = 0; col < this.numCols; col++) {
 			this.drawCol(col);
 		}
@@ -173,7 +184,6 @@ class NeuralNetworkDiagram {
 	}
 
 	drawNode(x: number, y: number, r: number, isInput: boolean, isBias: boolean) {
-		if (!this.ctx) return;
 		this.ctx.strokeStyle = 'black';
 		if (isBias)
 			this.ctx.fillStyle = '#2DD';

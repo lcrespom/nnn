@@ -242,37 +242,51 @@ var NeuralNetworkDiagram = (function () {
     function NeuralNetworkDiagram(net, canvas) {
         this.net = net;
         this.canvas = canvas;
-        this.ctx = canvas.getContext('2d');
+        var ctx = canvas.getContext('2d');
+        if (ctx)
+            this.ctx = ctx;
         this.numCols = this.net.layerSizes.length + 1;
         var colW = this.canvas.width / this.numCols;
         this.r = Math.min(20, colW / 4);
     }
     NeuralNetworkDiagram.prototype.draw = function () {
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         this.drawWeights();
         this.drawNodes();
     };
     NeuralNetworkDiagram.prototype.drawWeights = function () {
+        var minW = 0, maxW = 0;
+        this.net.layers.forEach(function (l) { return l.forEach(function (n) { return n.weights.forEach(function (w) {
+            if (w < minW)
+                minW = w;
+            if (w > maxW)
+                maxW = w;
+        }); }); });
+        if (minW == 0)
+            minW = 1;
+        if (maxW == 0)
+            maxW = 1;
         for (var i = 0; i < this.net.layers.length; i++)
             for (var j = 0; j < this.net.layers[i].length; j++)
-                this.drawNodeWeights(i, j);
+                this.drawNodeWeights(i, j, minW, maxW);
     };
-    NeuralNetworkDiagram.prototype.drawNodeWeights = function (i, j) {
-        if (!this.ctx)
-            return;
+    NeuralNetworkDiagram.prototype.drawNodeWeights = function (i, j, minW, maxW) {
         var neuron = this.net.layers[i][j];
-        for (var w = 0; w < neuron.weights.length; w++) {
+        for (var w = 0; w < neuron.weights.length - 1; w++) {
+            //TODO add bias!!!
             var _a = this.getCenter(i, w), x1 = _a[0], y1 = _a[1];
             var _b = this.getCenter(i + 1, j), x2 = _b[0], y2 = _b[1];
-            this.ctx.strokeStyle = 'black'; //TODO match weight to darkness
+            var nw = neuron.weights[w];
+            var div = nw < 0 ? minW : maxW;
+            nw = 100 - 100 * (nw / div);
+            this.ctx.strokeStyle = "rgb(" + nw + "%, " + nw + "%, " + nw + "%)";
+            this.ctx.beginPath();
             this.ctx.moveTo(x1, y1);
             this.ctx.lineTo(x2, y2);
             this.ctx.stroke();
         }
     };
     NeuralNetworkDiagram.prototype.drawNodes = function () {
-        if (!this.ctx)
-            return;
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         for (var col = 0; col < this.numCols; col++) {
             this.drawCol(col);
         }
@@ -287,8 +301,6 @@ var NeuralNetworkDiagram = (function () {
         }
     };
     NeuralNetworkDiagram.prototype.drawNode = function (x, y, r, isInput, isBias) {
-        if (!this.ctx)
-            return;
         this.ctx.strokeStyle = 'black';
         if (isBias)
             this.ctx.fillStyle = '#2DD';
