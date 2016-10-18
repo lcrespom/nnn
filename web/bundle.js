@@ -1,5 +1,119 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 "use strict";
+var NeuralNetworkDiagram = (function () {
+    function NeuralNetworkDiagram(net, canvas) {
+        this.net = net;
+        this.canvas = canvas;
+        var ctx = canvas.getContext('2d');
+        if (ctx)
+            this.ctx = ctx;
+        this.numCols = this.net.layerSizes.length + 1;
+        // Calculate radius
+        var maxRows = net.numInputs;
+        net.layers.forEach(function (layer) { return maxRows = Math.max(maxRows, layer.length); });
+        var colH = this.canvas.height / maxRows;
+        this.r = Math.min(20, colH / 3);
+    }
+    NeuralNetworkDiagram.prototype.draw = function () {
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.drawWeights();
+        this.drawNodes();
+    };
+    NeuralNetworkDiagram.prototype.drawWeights = function () {
+        var gco = this.ctx.globalCompositeOperation;
+        this.ctx.globalCompositeOperation = 'darken';
+        var minW = 0, maxW = 0;
+        this.net.layers.forEach(function (l) { return l.forEach(function (n) { return n.weights.forEach(function (w) {
+            if (w < minW)
+                minW = w;
+            if (w > maxW)
+                maxW = w;
+        }); }); });
+        if (minW == 0)
+            minW = 1;
+        if (maxW == 0)
+            maxW = 1;
+        for (var i = 0; i < this.net.layers.length; i++)
+            for (var j = 0; j < this.net.layers[i].length; j++)
+                this.drawNodeWeights(i, j, minW, maxW);
+        this.ctx.globalCompositeOperation = gco;
+    };
+    NeuralNetworkDiagram.prototype.drawNodeWeights = function (i, j, minW, maxW) {
+        var neuron = this.net.layers[i][j];
+        for (var w = 0; w < neuron.weights.length; w++) {
+            var nw = neuron.weights[w];
+            var div = nw < 0 ? minW : maxW;
+            var hue = nw < 0 ? 0 : 120;
+            var lightness = 100 - 66 * (nw / div);
+            this.ctx.strokeStyle = "hsl(" + hue + ", 100%, " + lightness + "%)";
+            var _a = this.getCenter(i, w), x1 = _a[0], y1 = _a[1];
+            var _b = this.getCenter(i + 1, j), x2 = _b[0], y2 = _b[1];
+            this.ctx.beginPath();
+            this.ctx.moveTo(x1, y1);
+            this.ctx.lineTo(x2, y2);
+            this.ctx.stroke();
+        }
+    };
+    NeuralNetworkDiagram.prototype.drawNodes = function () {
+        for (var col = 0; col < this.numCols; col++) {
+            this.drawCol(col);
+        }
+    };
+    NeuralNetworkDiagram.prototype.drawCol = function (col) {
+        var numRows = this.getNumRows(col);
+        var isOutput = this.isOutput(col);
+        for (var row = 0; row < numRows; row++) {
+            var isInput = col == 0;
+            var isBias = !isOutput && row == numRows - 1;
+            var _a = this.getCenter(col, row), x = _a[0], y = _a[1];
+            this.drawNode(x, y, this.r, isInput, isBias);
+        }
+    };
+    NeuralNetworkDiagram.prototype.drawNode = function (x, y, r, isInput, isBias) {
+        this.ctx.strokeStyle = 'black';
+        if (isBias)
+            this.ctx.fillStyle = '#2DD';
+        else
+            this.ctx.fillStyle = '#337AB7';
+        if (isInput || isBias) {
+            var x1 = x - r;
+            var y1 = y - r;
+            var dxy = r * 2;
+            this.ctx.fillRect(x1, y1, dxy, dxy);
+            this.ctx.strokeRect(x1, y1, dxy, dxy);
+        }
+        else {
+            this.ctx.beginPath();
+            this.ctx.arc(x, y, r, 0, Math.PI * 2);
+            this.ctx.fill();
+            this.ctx.beginPath();
+            this.ctx.arc(x, y, r, 0, Math.PI * 2);
+            this.ctx.stroke();
+        }
+    };
+    NeuralNetworkDiagram.prototype.getCenter = function (col, row) {
+        var numRows = this.getNumRows(col);
+        var colW = this.canvas.width / this.numCols;
+        var rowH = this.canvas.height / numRows;
+        var x = col * colW + colW / 2;
+        var y = row * rowH + rowH / 2;
+        return [x, y];
+    };
+    NeuralNetworkDiagram.prototype.getNumRows = function (col) {
+        var numRows = col == 0 ? this.net.numInputs : this.net.layerSizes[col - 1];
+        if (!this.isOutput(col))
+            numRows++;
+        return numRows;
+    };
+    NeuralNetworkDiagram.prototype.isOutput = function (col) {
+        return col == this.net.layerSizes.length;
+    };
+    return NeuralNetworkDiagram;
+}());
+exports.NeuralNetworkDiagram = NeuralNetworkDiagram;
+
+},{}],2:[function(require,module,exports){
+"use strict";
 var DEFAULT_ACTIVATION_FUNCTION = sigmoid;
 var Neuron = (function () {
     function Neuron(numWeights) {
@@ -126,9 +240,10 @@ function sigmoid(x) {
         return 1.0 / (1.0 + Math.exp(-x));
 }
 
-},{}],2:[function(require,module,exports){
+},{}],3:[function(require,module,exports){
 "use strict";
 var neurons_1 = require('./neurons');
+var diagram_1 = require('./diagram');
 var nn;
 $(function () {
     // $('input,textarea').on('input', evt => {
@@ -153,7 +268,7 @@ $(function () {
             $('#liters').val(nn.learnIteration);
             $('#lerror').val(fmtNum(nn.learnError, 9));
             $('#buttest, #butdiagram').attr('disabled', false);
-            new NeuralNetworkDiagram(nn, $('#nn-diagram').get(0)).draw();
+            new diagram_1.NeuralNetworkDiagram(nn, $('#nn-diagram').get(0)).draw();
         }, 10);
     });
     // -------------------- Handle click on "Test" button --------------------
@@ -167,7 +282,7 @@ $(function () {
             .join('\n');
         $('#tout').text(strResult);
     });
-    // -------------------- Handle click on "Test" button --------------------
+    // -------------------- Handle click on diagram button --------------------
     $('#butdiagram').click(function (_) {
         if (!nn)
             return;
@@ -176,7 +291,7 @@ $(function () {
         var title = hidden ? 'Hide diagram' : 'Show diagram';
         $('#butdiagram').text(title);
         if (hidden)
-            new NeuralNetworkDiagram(nn, $diagram.get(0)).draw();
+            new diagram_1.NeuralNetworkDiagram(nn, $diagram.get(0)).draw();
         $diagram.slideToggle();
     });
     // -------------------- Enable bootstrap-styled tooltips --------------------
@@ -243,117 +358,6 @@ function fmtNum(n, len) {
     if (len === void 0) { len = 5; }
     return n.toString().substr(0, len);
 }
-// ------------------------- Diagram drawing -------------------------
-var NeuralNetworkDiagram = (function () {
-    function NeuralNetworkDiagram(net, canvas) {
-        this.net = net;
-        this.canvas = canvas;
-        var ctx = canvas.getContext('2d');
-        if (ctx)
-            this.ctx = ctx;
-        this.numCols = this.net.layerSizes.length + 1;
-        // Calculate radius
-        var maxRows = net.numInputs;
-        net.layers.forEach(function (layer) { return maxRows = Math.max(maxRows, layer.length); });
-        var colH = this.canvas.height / maxRows;
-        this.r = Math.min(20, colH / 3);
-    }
-    NeuralNetworkDiagram.prototype.draw = function () {
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        this.drawWeights();
-        this.drawNodes();
-    };
-    NeuralNetworkDiagram.prototype.drawWeights = function () {
-        var gco = this.ctx.globalCompositeOperation;
-        this.ctx.globalCompositeOperation = 'darken';
-        var minW = 0, maxW = 0;
-        this.net.layers.forEach(function (l) { return l.forEach(function (n) { return n.weights.forEach(function (w) {
-            if (w < minW)
-                minW = w;
-            if (w > maxW)
-                maxW = w;
-        }); }); });
-        if (minW == 0)
-            minW = 1;
-        if (maxW == 0)
-            maxW = 1;
-        for (var i = 0; i < this.net.layers.length; i++)
-            for (var j = 0; j < this.net.layers[i].length; j++)
-                this.drawNodeWeights(i, j, minW, maxW);
-        this.ctx.globalCompositeOperation = gco;
-    };
-    NeuralNetworkDiagram.prototype.drawNodeWeights = function (i, j, minW, maxW) {
-        var neuron = this.net.layers[i][j];
-        for (var w = 0; w < neuron.weights.length; w++) {
-            var nw = neuron.weights[w];
-            var div = nw < 0 ? minW : maxW;
-            var hue = nw < 0 ? 0 : 120;
-            nw = 100 - 66 * (nw / div);
-            this.ctx.strokeStyle = "hsl(" + hue + ", 100%, " + nw + "%)";
-            var _a = this.getCenter(i, w), x1 = _a[0], y1 = _a[1];
-            var _b = this.getCenter(i + 1, j), x2 = _b[0], y2 = _b[1];
-            this.ctx.beginPath();
-            this.ctx.moveTo(x1, y1);
-            this.ctx.lineTo(x2, y2);
-            this.ctx.stroke();
-        }
-    };
-    NeuralNetworkDiagram.prototype.drawNodes = function () {
-        for (var col = 0; col < this.numCols; col++) {
-            this.drawCol(col);
-        }
-    };
-    NeuralNetworkDiagram.prototype.drawCol = function (col) {
-        var numRows = this.getNumRows(col);
-        var isOutput = this.isOutput(col);
-        for (var row = 0; row < numRows; row++) {
-            var isInput = col == 0;
-            var isBias = !isOutput && row == numRows - 1;
-            var _a = this.getCenter(col, row), x = _a[0], y = _a[1];
-            this.drawNode(x, y, this.r, isInput, isBias);
-        }
-    };
-    NeuralNetworkDiagram.prototype.drawNode = function (x, y, r, isInput, isBias) {
-        this.ctx.strokeStyle = 'black';
-        if (isBias)
-            this.ctx.fillStyle = '#2DD';
-        else
-            this.ctx.fillStyle = '#337AB7';
-        if (isInput || isBias) {
-            var x1 = x - r;
-            var y1 = y - r;
-            var dxy = r * 2;
-            this.ctx.fillRect(x1, y1, dxy, dxy);
-            this.ctx.strokeRect(x1, y1, dxy, dxy);
-        }
-        else {
-            this.ctx.beginPath();
-            this.ctx.arc(x, y, r, 0, Math.PI * 2);
-            this.ctx.fill();
-            this.ctx.beginPath();
-            this.ctx.arc(x, y, r, 0, Math.PI * 2);
-            this.ctx.stroke();
-        }
-    };
-    NeuralNetworkDiagram.prototype.getCenter = function (col, row) {
-        var numRows = this.getNumRows(col);
-        var colW = this.canvas.width / this.numCols;
-        var rowH = this.canvas.height / numRows;
-        var x = col * colW + colW / 2;
-        var y = row * rowH + rowH / 2;
-        return [x, y];
-    };
-    NeuralNetworkDiagram.prototype.getNumRows = function (col) {
-        var numRows = col == 0 ? nn.numInputs : this.net.layerSizes[col - 1];
-        if (!this.isOutput(col))
-            numRows++;
-        return numRows;
-    };
-    NeuralNetworkDiagram.prototype.isOutput = function (col) {
-        return col == this.net.layerSizes.length;
-    };
-    return NeuralNetworkDiagram;
-}());
 
-},{"./neurons":1}]},{},[2])
+},{"./diagram":1,"./neurons":2}]},{},[3])
 //# sourceMappingURL=bundle.js.map
