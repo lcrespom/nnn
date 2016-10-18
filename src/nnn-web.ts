@@ -24,7 +24,8 @@ $(function() {
 			$('#butlearn').text('Learn');
 			$('#liters').val(nn.learnIteration);
 			$('#lerror').val(fmtNum(nn.learnError, 9));
-			$('#buttest').attr('disabled', <any>false);
+			$('#buttest, #butdiagram').attr('disabled', <any>false);
+			new NeuralNetworkDiagram(nn, <HTMLCanvasElement>$('#nn-diagram').get(0)).draw();
 		}, 10);
 	});
 	// -------------------- Handle click on "Test" button --------------------
@@ -41,8 +42,13 @@ $(function() {
 	// -------------------- Handle click on "Test" button --------------------
 	$('#butdiagram').click(_ => {
 		if (!nn) return;
-		let nnd = new NeuralNetworkDiagram(nn, <HTMLCanvasElement>$('#nn-diagram').get(0));
-		nnd.draw();
+		let $diagram = $('#nn-diagram');
+		let hidden = ($diagram.css('display') == 'none');
+		let title = hidden ? 'Hide diagram' : 'Show diagram';
+		$('#butdiagram').text(title);
+		if (hidden)
+			new NeuralNetworkDiagram(nn, <HTMLCanvasElement>$diagram.get(0)).draw();
+		$diagram.slideToggle();
 	});
 	// -------------------- Enable bootstrap-styled tooltips --------------------
 	$('[data-toggle="tooltip"]').tooltip();
