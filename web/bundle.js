@@ -43,7 +43,7 @@ var NeuralNetworkDiagram = (function () {
         for (var w = 0; w < neuron.weights.length; w++) {
             var nw = neuron.weights[w];
             var div = nw < 0 ? minW : maxW;
-            var hue = nw < 0 ? 0 : 120;
+            var hue = nw < 0 ? 0 : 240;
             var lightness = 100 - 66 * (nw / div);
             this.ctx.strokeStyle = "hsl(" + hue + ", 100%, " + lightness + "%)";
             var _a = this.getCenter(i, w), x1 = _a[0], y1 = _a[1];

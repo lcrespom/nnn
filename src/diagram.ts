@@ -44,7 +44,7 @@ export class NeuralNetworkDiagram {
 		for (let w = 0; w < neuron.weights.length; w++) {
 			let nw = neuron.weights[w];
 			let div = nw < 0 ? minW : maxW;
-			let hue = nw < 0 ? 0 : 120;
+			let hue = nw < 0 ? 0 : 240;
 			let lightness = 100 - 66 * (nw / div);
 			this.ctx.strokeStyle = `hsl(${hue}, 100%, ${lightness}%)`;
 			let [x1, y1] = this.getCenter(i, w);
