@@ -242,6 +242,9 @@ var NeuralNetworkDiagram = (function () {
         this.net = net;
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
+        this.numCols = this.net.layerSizes.length + 1;
+        var colW = this.canvas.width / this.numCols;
+        this.r = Math.min(20, colW / 4);
     }
     NeuralNetworkDiagram.prototype.draw = function () {
         this.drawWeights();
@@ -253,26 +256,17 @@ var NeuralNetworkDiagram = (function () {
         if (!this.ctx)
             return;
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        var numRows;
-        var numCols = this.net.layerSizes.length + 1;
-        for (var col = 0; col < numCols; col++) {
-            if (col == 0)
-                numRows = nn.numInputs;
-            else
-                numRows = this.net.layerSizes[col - 1];
-            this.drawCol(col, numCols, numRows, col == 0);
+        for (var col = 0; col < this.numCols; col++) {
+            this.drawCol(col);
         }
     };
-    NeuralNetworkDiagram.prototype.drawCol = function (col, numCols, numRows, isInput) {
-        var colW = this.canvas.width / numCols;
-        var rowH = this.canvas.height / numRows;
-        var x = col * colW + colW / 2;
-        var y;
-        var r = Math.min(20, colW / 2);
+    NeuralNetworkDiagram.prototype.drawCol = function (col) {
+        var numRows = col == 0 ? nn.numInputs : this.net.layerSizes[col - 1];
         for (var row = 0; row < numRows; row++) {
-            y = row * rowH + rowH / 2;
+            var isInput = col == 0;
             var isBias = false; //TODO draw bias
-            this.drawNode(x, y, r, isInput, isBias);
+            var _a = this.getCenter(col, row), x = _a[0], y = _a[1];
+            this.drawNode(x, y, this.r, isInput, isBias);
         }
     };
     NeuralNetworkDiagram.prototype.drawNode = function (x, y, r, isInput, isBias) {
@@ -299,8 +293,13 @@ var NeuralNetworkDiagram = (function () {
             this.ctx.stroke();
         }
     };
-    NeuralNetworkDiagram.prototype.getCenter = function (layer, row) {
-        return [0, 0]; //TODO
+    NeuralNetworkDiagram.prototype.getCenter = function (col, row) {
+        var numRows = col == 0 ? nn.numInputs : this.net.layerSizes[col - 1];
+        var colW = this.canvas.width / this.numCols;
+        var rowH = this.canvas.height / numRows;
+        var x = col * colW + colW / 2;
+        var y = row * rowH + rowH / 2;
+        return [x, y];
     };
     return NeuralNetworkDiagram;
 }());

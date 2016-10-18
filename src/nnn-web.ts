@@ -120,9 +120,14 @@ function fmtNum(n: number, len = 5): string {
 
 class NeuralNetworkDiagram {
 	ctx: CanvasRenderingContext2D | null;
+	r: number;
+	numCols: number;
 
 	constructor(public net: NeuralNetwork, public canvas: HTMLCanvasElement) {
 		this.ctx = canvas.getContext('2d');
+		this.numCols = this.net.layerSizes.length + 1
+		let colW = this.canvas.width / this.numCols;
+		this.r = Math.min(20, colW / 4);
 	}
 
 	draw() {
@@ -136,25 +141,18 @@ class NeuralNetworkDiagram {
 	drawNodes() {
 		if (!this.ctx) return;
 		this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-		let numRows;
-		let numCols = this.net.layerSizes.length + 1;
-		for (let col = 0; col < numCols; col++) {
-			if (col == 0) numRows = nn.numInputs;
-			else numRows = this.net.layerSizes[col - 1];
-			this.drawCol(col, numCols, numRows, col == 0);
+		for (let col = 0; col < this.numCols; col++) {
+			this.drawCol(col);
 		}
 	}
 
-	drawCol(col: number, numCols: number, numRows: number, isInput: boolean) {
-		let colW = this.canvas.width / numCols;
-		let rowH = this.canvas.height / numRows;
-		let x = col * colW + colW / 2;
-		let y;
-		let r = Math.min(20, colW / 2);
+	drawCol(col: number) {
+		let numRows = col == 0 ? nn.numInputs : this.net.layerSizes[col - 1];
 		for (let row = 0; row < numRows; row++) {
-			y = row * rowH + rowH / 2;
+			let isInput = col == 0;
 			let isBias = false;	//TODO draw bias
-			this.drawNode(x, y, r, isInput, isBias);
+			let [x, y] = this.getCenter(col, row);
+			this.drawNode(x, y, this.r, isInput, isBias);
 		}
 	}
 
@@ -182,7 +180,12 @@ class NeuralNetworkDiagram {
 		}
 	}
 
-	getCenter(layer: number, row: number): [number, number] {
-		return [0, 0];	//TODO
+	getCenter(col: number, row: number): [number, number] {
+		let numRows = col == 0 ? nn.numInputs : this.net.layerSizes[col - 1];
+		let colW = this.canvas.width / this.numCols;
+		let rowH = this.canvas.height / numRows;
+		let x = col * colW + colW / 2;
+		let y = row * rowH + rowH / 2;
+		return [x, y];
 	}
 }
