@@ -138,6 +138,8 @@ class NeuralNetworkDiagram {
 	}
 
 	drawWeights() {
+		let gco = this.ctx.globalCompositeOperation;
+		this.ctx.globalCompositeOperation  = 'darken';
 		let minW = 0, maxW = 0;
 		this.net.layers.forEach(l => l.forEach(n => n.weights.forEach(w => {
 			if (w < minW) minW = w;
@@ -148,18 +150,20 @@ class NeuralNetworkDiagram {
 		for (let i = 0; i < this.net.layers.length; i++)
 			for (let j = 0; j < this.net.layers[i].length; j++)
 				this.drawNodeWeights(i, j, minW, maxW);
+		this.ctx.globalCompositeOperation  = gco;
 	}
 
 	drawNodeWeights(i: number, j: number, minW: number, maxW: number) {
 		let neuron = this.net.layers[i][j];
 		for (let w = 0; w < neuron.weights.length - 1; w++) {
 			//TODO add bias!!!
-			let [x1, y1] = this.getCenter(i, w);
-			let [x2, y2] = this.getCenter(i + 1, j);
 			let nw = neuron.weights[w];
 			let div = nw < 0 ? minW : maxW;
-			nw = 100 - 100 * (nw / div);
-			this.ctx.strokeStyle = `rgb(${nw}%, ${nw}%, ${nw}%)`;
+			let hue = nw < 0 ? 0 : 120;
+			nw = 100 - 66 * (nw / div);
+			this.ctx.strokeStyle = `hsl(${hue}, 100%, ${nw}%)`;
+			let [x1, y1] = this.getCenter(i, w);
+			let [x2, y2] = this.getCenter(i + 1, j);
 			this.ctx.beginPath();
 			this.ctx.moveTo(x1, y1);
 			this.ctx.lineTo(x2, y2);

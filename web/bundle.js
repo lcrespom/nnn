@@ -255,6 +255,8 @@ var NeuralNetworkDiagram = (function () {
         this.drawNodes();
     };
     NeuralNetworkDiagram.prototype.drawWeights = function () {
+        var gco = this.ctx.globalCompositeOperation;
+        this.ctx.globalCompositeOperation = 'darken';
         var minW = 0, maxW = 0;
         this.net.layers.forEach(function (l) { return l.forEach(function (n) { return n.weights.forEach(function (w) {
             if (w < minW)
@@ -269,17 +271,19 @@ var NeuralNetworkDiagram = (function () {
         for (var i = 0; i < this.net.layers.length; i++)
             for (var j = 0; j < this.net.layers[i].length; j++)
                 this.drawNodeWeights(i, j, minW, maxW);
+        this.ctx.globalCompositeOperation = gco;
     };
     NeuralNetworkDiagram.prototype.drawNodeWeights = function (i, j, minW, maxW) {
         var neuron = this.net.layers[i][j];
         for (var w = 0; w < neuron.weights.length - 1; w++) {
             //TODO add bias!!!
-            var _a = this.getCenter(i, w), x1 = _a[0], y1 = _a[1];
-            var _b = this.getCenter(i + 1, j), x2 = _b[0], y2 = _b[1];
             var nw = neuron.weights[w];
             var div = nw < 0 ? minW : maxW;
-            nw = 100 - 100 * (nw / div);
-            this.ctx.strokeStyle = "rgb(" + nw + "%, " + nw + "%, " + nw + "%)";
+            var hue = nw < 0 ? 0 : 120;
+            nw = 100 - 66 * (nw / div);
+            this.ctx.strokeStyle = "hsl(" + hue + ", 100%, " + nw + "%)";
+            var _a = this.getCenter(i, w), x1 = _a[0], y1 = _a[1];
+            var _b = this.getCenter(i + 1, j), x2 = _b[0], y2 = _b[1];
             this.ctx.beginPath();
             this.ctx.moveTo(x1, y1);
             this.ctx.lineTo(x2, y2);
