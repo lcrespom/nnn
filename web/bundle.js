@@ -125,7 +125,6 @@ function sigmoid(x) {
     else
         return 1.0 / (1.0 + Math.exp(-x));
 }
-
 },{}],2:[function(require,module,exports){
 "use strict";
 var neurons_1 = require('./neurons');
@@ -229,6 +228,5 @@ function fmtNum(n, len) {
     if (len === void 0) { len = 5; }
     return n.toString().substr(0, len);
 }
-
 },{"./neurons":1}]},{},[2])
 //# sourceMappingURL=bundle.js.map

@@ -12,7 +12,7 @@ adjust the network parameters and provide learn and test data.
 
 
 ## ToDo
-- Accept a variable number of hidden layers
+- Accept a variable number of hidden layers => test using realistic model
 - Web UI
 	- Validation & error message reporting
 	- Report time spent learning
