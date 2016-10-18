@@ -125,6 +125,7 @@ function sigmoid(x) {
     else
         return 1.0 / (1.0 + Math.exp(-x));
 }
+
 },{}],2:[function(require,module,exports){
 "use strict";
 var neurons_1 = require('./neurons');
@@ -278,8 +279,8 @@ var NeuralNetworkDiagram = (function () {
         else
             this.ctx.fillStyle = '#337AB7';
         if (isInput) {
-            var x1 = x - r / 2;
-            var y1 = y - r / 2;
+            var x1 = x - r;
+            var y1 = y - r;
             var dxy = r * 2;
             this.ctx.fillRect(x1, y1, dxy, dxy);
             this.ctx.strokeRect(x1, y1, dxy, dxy);
@@ -303,5 +304,6 @@ var NeuralNetworkDiagram = (function () {
     };
     return NeuralNetworkDiagram;
 }());
+
 },{"./neurons":1}]},{},[2])
 //# sourceMappingURL=bundle.js.map

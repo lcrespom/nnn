@@ -164,8 +164,8 @@ class NeuralNetworkDiagram {
 		else
 			this.ctx.fillStyle = '#337AB7';
 		if (isInput) {
-			let x1 = x - r / 2;
-			let y1 = y - r / 2;
+			let x1 = x - r;
+			let y1 = y - r;
 			let dxy = r * 2;
 			this.ctx.fillRect(x1, y1, dxy, dxy);
 			this.ctx.strokeRect(x1, y1, dxy, dxy);
