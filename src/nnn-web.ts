@@ -133,8 +133,11 @@ class NeuralNetworkDiagram {
 		let ctx = canvas.getContext('2d');
 		if (ctx) this.ctx = ctx;
 		this.numCols = this.net.layerSizes.length + 1;
-		let colW = this.canvas.width / this.numCols;
-		this.r = Math.min(20, colW / 4);
+		// Calculate radius
+		let maxRows = net.numInputs;
+		net.layers.forEach(layer => maxRows = Math.max(maxRows, layer.length));
+		let colH = this.canvas.height / maxRows;
+		this.r = Math.min(20, colH / 3);
 	}
 
 	draw() {

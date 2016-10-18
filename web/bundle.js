@@ -252,8 +252,11 @@ var NeuralNetworkDiagram = (function () {
         if (ctx)
             this.ctx = ctx;
         this.numCols = this.net.layerSizes.length + 1;
-        var colW = this.canvas.width / this.numCols;
-        this.r = Math.min(20, colW / 4);
+        // Calculate radius
+        var maxRows = net.numInputs;
+        net.layers.forEach(function (layer) { return maxRows = Math.max(maxRows, layer.length); });
+        var colH = this.canvas.height / maxRows;
+        this.r = Math.min(20, colH / 3);
     }
     NeuralNetworkDiagram.prototype.draw = function () {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
