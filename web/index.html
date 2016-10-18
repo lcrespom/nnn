@@ -55,6 +55,12 @@
 					<input id="noutputs" value="3"
 						type="number" min="1" max="100" step="1" class="form-control">
 				</div>
+				<div class="form-group">
+					<button id="butdiagram" style="vertical-align: top"
+						type="button" class="btn btn-primary">Diagram</button>
+					<canvas width="500" height="400" id="nn-diagram">
+					</canvas>
+				</div>
 			</fieldset>
 		</form>
 
@@ -76,12 +82,6 @@
 					<input id="epsilon" value="0.5"
 						type="number" min="0" max="9999" class="form-control">
 				</div>
-				<div class="form-group">
-					<label for="lsample">Learn data line format:</label>
-					<input id="lsample" value="in1 in2 in3 / out1 out2 out3"
-						type="text" class="form-control" readonly size="30">
-				</div>
-				<br>
 				<div class="form-group" style="width: 100%; padding-right: 1em">
 					<label for="ldata">Learn data lines:</label><br>
 					<textarea id="ldata" style="width: 100%"
@@ -115,12 +115,6 @@
 		<form class="form-inline">
 			<fieldset>
 				<legend>Test</legend>
-				<div class="form-group">
-					<label for="tsample">Test data line format:</label>
-					<input id="tsample" value="in1 in2 in3"
-						type="text" class="form-control" readonly size="15">
-				</div>
-				<br>
 				<div class="form-group" style="width: 40%; padding-right: 1em">
 					<label for="tdata">Test data lines:</label><br>
 					<textarea id="tdata" style="width: 100%"

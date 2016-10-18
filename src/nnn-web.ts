@@ -38,9 +38,18 @@ $(function() {
 			.join('\n');
 		$('#tout').text(strResult);
 	});
+	// -------------------- Handle click on "Test" button --------------------
+	$('#butdiagram').click(_ => {
+		if (!nn) return;
+		let nnd = new NeuralNetworkDiagram(nn, <HTMLCanvasElement>$('#nn-diagram').get(0));
+		nnd.draw();
+	});
 	// -------------------- Enable bootstrap-styled tooltips --------------------
 	$('[data-toggle="tooltip"]').tooltip();
 });
+
+
+// ------------------------- User input parsing -------------------------
 
 function getFormData() {
 	return {
@@ -104,4 +113,76 @@ function parseNumbers(line: string): number[] {
 
 function fmtNum(n: number, len = 5): string {
 	return n.toString().substr(0, len);
+}
+
+
+// ------------------------- Diagram drawing -------------------------
+
+class NeuralNetworkDiagram {
+	ctx: CanvasRenderingContext2D | null;
+
+	constructor(public net: NeuralNetwork, public canvas: HTMLCanvasElement) {
+		this.ctx = canvas.getContext('2d');
+	}
+
+	draw() {
+		this.drawWeights();
+		this.drawNodes();
+	}
+
+	drawWeights() {
+	}
+
+	drawNodes() {
+		if (!this.ctx) return;
+		this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+		let numRows;
+		let numCols = this.net.layerSizes.length + 1;
+		for (let col = 0; col < numCols; col++) {
+			if (col == 0) numRows = nn.numInputs;
+			else numRows = this.net.layerSizes[col - 1];
+			this.drawCol(col, numCols, numRows, col == 0);
+		}
+	}
+
+	drawCol(col: number, numCols: number, numRows: number, isInput: boolean) {
+		let colW = this.canvas.width / numCols;
+		let rowH = this.canvas.height / numRows;
+		let x = col * colW + colW / 2;
+		let y;
+		let r = Math.min(20, colW / 2);
+		for (let row = 0; row < numRows; row++) {
+			y = row * rowH + rowH / 2;
+			let isBias = false;	//TODO draw bias
+			this.drawNode(x, y, r, isInput, isBias);
+		}
+	}
+
+	drawNode(x: number, y: number, r: number, isInput: boolean, isBias: boolean) {
+		if (!this.ctx) return;
+		this.ctx.strokeStyle = 'black';
+		if (isBias)
+			this.ctx.fillStyle = '#2DD';
+		else
+			this.ctx.fillStyle = '#337AB7';
+		if (isInput) {
+			let x1 = x - r / 2;
+			let y1 = y - r / 2;
+			let dxy = r * 2;
+			this.ctx.fillRect(x1, y1, dxy, dxy);
+			this.ctx.strokeRect(x1, y1, dxy, dxy);
+		}
+		else {
+			this.ctx.beginPath();
+			this.ctx.arc(x, y, r, 0, Math.PI * 2);
+			this.ctx.fill();
+			this.ctx.beginPath();
+			this.ctx.arc(x, y, r, 0, Math.PI * 2);
+			this.ctx.stroke();
+		}
+	}
+
+	getCenter(layer: number, row: number): [number, number] {
+		return [0, 0];	//TODO
+	}
 }
