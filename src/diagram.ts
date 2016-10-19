@@ -1,6 +1,14 @@
 import { NeuralNetwork } from './neurons';
 
 
+const BORDER_COLOR = 'black';
+const NEURON_COLOR = '#337AB7';
+const INPUT_COLOR = NEURON_COLOR;
+const BIAS_COLOR = '#2DD';
+const NEGATIVE_WEIGHT_HUE = 0;
+const POSITIVE_WEIGHT_HUE = 240;
+
+
 export class NeuralNetworkDiagram {
 	ctx: CanvasRenderingContext2D;
 	r: number;
@@ -44,7 +52,7 @@ export class NeuralNetworkDiagram {
 		for (let w = 0; w < neuron.weights.length; w++) {
 			let nw = neuron.weights[w];
 			let div = nw < 0 ? minW : maxW;
-			let hue = nw < 0 ? 0 : 240;
+			let hue = nw < 0 ? NEGATIVE_WEIGHT_HUE : POSITIVE_WEIGHT_HUE;
 			let lightness = 100 - 66 * (nw / div);
 			this.ctx.strokeStyle = `hsl(${hue}, 100%, ${lightness}%)`;
 			let [x1, y1] = this.getCenter(i, w);
@@ -74,11 +82,13 @@ export class NeuralNetworkDiagram {
 	}
 
 	drawNode(x: number, y: number, r: number, isInput: boolean, isBias: boolean) {
-		this.ctx.strokeStyle = 'black';
+		this.ctx.strokeStyle = BORDER_COLOR;
 		if (isBias)
-			this.ctx.fillStyle = '#2DD';
+			this.ctx.fillStyle = BIAS_COLOR;
+		else if (isInput)
+			this.ctx.fillStyle = INPUT_COLOR;
 		else
-			this.ctx.fillStyle = '#337AB7';
+			this.ctx.fillStyle = NEURON_COLOR;
 		if (isInput || isBias) {
 			let x1 = x - r;
 			let y1 = y - r;

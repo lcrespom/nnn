@@ -1,5 +1,11 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 "use strict";
+var BORDER_COLOR = 'black';
+var NEURON_COLOR = '#337AB7';
+var INPUT_COLOR = NEURON_COLOR;
+var BIAS_COLOR = '#2DD';
+var NEGATIVE_WEIGHT_HUE = 0;
+var POSITIVE_WEIGHT_HUE = 240;
 var NeuralNetworkDiagram = (function () {
     function NeuralNetworkDiagram(net, canvas) {
         this.net = net;
@@ -43,7 +49,7 @@ var NeuralNetworkDiagram = (function () {
         for (var w = 0; w < neuron.weights.length; w++) {
             var nw = neuron.weights[w];
             var div = nw < 0 ? minW : maxW;
-            var hue = nw < 0 ? 0 : 240;
+            var hue = nw < 0 ? NEGATIVE_WEIGHT_HUE : POSITIVE_WEIGHT_HUE;
             var lightness = 100 - 66 * (nw / div);
             this.ctx.strokeStyle = "hsl(" + hue + ", 100%, " + lightness + "%)";
             var _a = this.getCenter(i, w), x1 = _a[0], y1 = _a[1];
@@ -70,11 +76,13 @@ var NeuralNetworkDiagram = (function () {
         }
     };
     NeuralNetworkDiagram.prototype.drawNode = function (x, y, r, isInput, isBias) {
-        this.ctx.strokeStyle = 'black';
+        this.ctx.strokeStyle = BORDER_COLOR;
         if (isBias)
-            this.ctx.fillStyle = '#2DD';
+            this.ctx.fillStyle = BIAS_COLOR;
+        else if (isInput)
+            this.ctx.fillStyle = INPUT_COLOR;
         else
-            this.ctx.fillStyle = '#337AB7';
+            this.ctx.fillStyle = NEURON_COLOR;
         if (isInput || isBias) {
             var x1 = x - r;
             var y1 = y - r;
@@ -111,7 +119,6 @@ var NeuralNetworkDiagram = (function () {
     return NeuralNetworkDiagram;
 }());
 exports.NeuralNetworkDiagram = NeuralNetworkDiagram;
-
 },{}],2:[function(require,module,exports){
 "use strict";
 var DEFAULT_ACTIVATION_FUNCTION = sigmoid;
@@ -239,7 +246,6 @@ function sigmoid(x) {
     else
         return 1.0 / (1.0 + Math.exp(-x));
 }
-
 },{}],3:[function(require,module,exports){
 "use strict";
 var neurons_1 = require('./neurons');
@@ -358,6 +364,5 @@ function fmtNum(n, len) {
     if (len === void 0) { len = 5; }
     return n.toString().substr(0, len);
 }
-
 },{"./diagram":1,"./neurons":2}]},{},[3])
 //# sourceMappingURL=bundle.js.map
