@@ -184,12 +184,12 @@ var NeuralNetwork = (function () {
     };
     NeuralNetwork.prototype.backPropagate = function (inputs, targets) {
         var outputLayer = this.layers[this.layers.length - 1];
-        var errors = outputLayer.map(function (neuron, i) { return targets[i] - neuron.output; });
+        var errors = map2(outputLayer, targets, function (neuron, target) { return target - neuron.output; });
         for (var l = this.layers.length - 1; l >= 0; l--) {
             var layer = this.layers[l];
             var prevLayerOuts = this.addBias(l > 0 ?
                 this.layers[l - 1].map(function (neuron) { return neuron.output; }) : inputs);
-            var prevLayerErrors = this.fillArray(prevLayerOuts.length, 0);
+            var prevLayerErrors = fillArray(prevLayerOuts.length, 0);
             for (var i = 0; i < layer.length; i++) {
                 this.backPropagateNeuron(layer[i], errors[i], prevLayerOuts, prevLayerErrors);
             }
@@ -229,12 +229,6 @@ var NeuralNetwork = (function () {
         if (iteration % 100 == 0)
             console.log("Learn iteration " + iteration + " - error: " + totalError);
     };
-    NeuralNetwork.prototype.fillArray = function (len, v) {
-        var a = new Array(len);
-        for (var i = 0; i < a.length; i++)
-            a[i] = v;
-        return a;
-    };
     return NeuralNetwork;
 }());
 exports.NeuralNetwork = NeuralNetwork;
@@ -247,6 +241,20 @@ function sigmoid(x) {
     else
         return 1.0 / (1.0 + Math.exp(-x));
 }
+// -------------------- Utility functions --------------------
+function fillArray(len, v) {
+    var a = new Array(len);
+    for (var i = 0; i < a.length; i++)
+        a[i] = v;
+    return a;
+}
+function map2(array1, array2, cb) {
+    if (array1.length >= array2.length)
+        return array1.map(function (e1, i) { return cb(e1, array2[i]); });
+    else
+        return array2.map(function (e2, i) { return cb(array1[i], e2); });
+}
+exports.map2 = map2;
 
 },{}],3:[function(require,module,exports){
 "use strict";
@@ -286,9 +294,8 @@ $(function () {
         var testResults = [];
         tests.forEach(function (test) { return testResults.push(nn.forward(test.inputs)); });
         var ranges = getRanges(tests.map(function (test) { return test.outputs; }));
-        var strResult = testResults
-            .map(function (result, i) { return result.map(function (x) { return fmtNum(x, 6); }).join('  ') +
-            compareResult(result, tests[i].outputs, ranges); }).join('\n');
+        var strResult = neurons_1.map2(testResults, tests, function (result, test) { return result.map(function (x) { return fmtNum(x, 6); }).join('  ') +
+            compareResult(result, test.outputs, ranges); }).join('\n');
         $('#tout').text(strResult);
     });
     // -------------------- Handle click on diagram button --------------------
@@ -355,12 +362,12 @@ function getRanges(nums) {
     var MAX_START = nums[0].map(function (x) { return Number.MAX_VALUE; });
     var MIN_START = MAX_START.map(function (x) { return -x; });
     var mins = nums.reduce(function (prevs, currs) {
-        return prevs.map(function (p, i) { return Math.min(p, currs[i]); });
+        return neurons_1.map2(prevs, currs, function (p, c) { return Math.min(p, c); });
     }, MAX_START);
     var maxs = nums.reduce(function (prevs, currs) {
-        return prevs.map(function (p, i) { return Math.max(p, currs[i]); });
+        return neurons_1.map2(prevs, currs, function (p, c) { return Math.max(p, c); });
     }, MIN_START);
-    var ranges = mins.map(function (min, i) { return maxs[i] - min; });
+    var ranges = neurons_1.map2(mins, maxs, function (min, max) { return max - min; });
     if (ranges.filter(function (x) { return isNaN(x); }).length > 0)
         ranges = [];
     return ranges;

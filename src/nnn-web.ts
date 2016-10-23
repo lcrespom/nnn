@@ -1,4 +1,4 @@
-import { NeuralNetwork, Example } from './neurons';
+import { NeuralNetwork, Example, map2 } from './neurons';
 import { NeuralNetworkDiagram } from './diagram';
 
 
@@ -37,9 +37,9 @@ $(function() {
 		let testResults: number[][] = [];
 		tests.forEach(test => testResults.push(nn.forward(test.inputs)));
 		let ranges = getRanges(tests.map(test => test.outputs));
-		let strResult = testResults
-			.map((result, i) => result.map(x => fmtNum(x, 6)).join('  ') +
-				compareResult(result, tests[i].outputs, ranges)).join('\n');
+		let strResult = map2(testResults, tests,
+			(result, test) => result.map(x => fmtNum(x, 6)).join('  ') +
+				compareResult(result, test.outputs, ranges)).join('\n');
 		$('#tout').text(strResult);
 	});
 	// -------------------- Handle click on diagram button --------------------
@@ -112,10 +112,10 @@ function getRanges(nums: number[][]): number[] {
 	let MAX_START = nums[0].map(x => Number.MAX_VALUE);
 	let MIN_START = MAX_START.map(x => -x);
 	let mins = nums.reduce((prevs, currs) =>
-		prevs.map((p, i) => Math.min(p, currs[i])), MAX_START);
+		map2(prevs, currs, (p, c) => Math.min(p, c)), MAX_START);
 	let maxs = nums.reduce((prevs, currs) =>
-		prevs.map((p, i) => Math.max(p, currs[i])), MIN_START);
-	let ranges = mins.map((min, i) => maxs[i] - min);
+		map2(prevs, currs, (p, c) => Math.max(p, c)), MIN_START);
+	let ranges = map2(mins, maxs, (min, max) => max - min);
 	if (ranges.filter(x => isNaN(x)).length > 0) ranges = [];
 	return ranges;
 }

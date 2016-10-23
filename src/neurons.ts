@@ -90,12 +90,12 @@ export class NeuralNetwork {
 
 	backPropagate(inputs: number[], targets: number[]): void {
 		let outputLayer = this.layers[this.layers.length - 1];
-		let errors = outputLayer.map((neuron, i) => targets[i] - neuron.output);
+		let errors = map2(outputLayer, targets, (neuron, target) => target - neuron.output);
 		for (let l = this.layers.length - 1; l >= 0; l--) {
 			let layer = this.layers[l];
 			let prevLayerOuts = this.addBias(l > 0 ?
 				this.layers[l - 1].map(neuron => neuron.output) : inputs);
-			let prevLayerErrors = this.fillArray(prevLayerOuts.length, 0);
+			let prevLayerErrors = fillArray(prevLayerOuts.length, 0);
 			for (let i = 0; i < layer.length; i++) {
 				this.backPropagateNeuron(layer[i], errors[i], prevLayerOuts, prevLayerErrors);
 			}
@@ -143,12 +143,6 @@ export class NeuralNetwork {
 			console.log(`Learn iteration ${iteration} - error: ${totalError}`);
 	}
 
-	fillArray<T>(len: number, v: T): T[] {
-		let a = new Array(len);
-		for (let i = 0; i < a.length; i++) a[i] = v;
-		return a;
-	}
-
 }
 
 
@@ -158,4 +152,19 @@ function sigmoid(x: number): number {
 	if (x < -45.0) return 0.0;
 	else if (x > 45.0) return 1.0;
 	else return 1.0 / (1.0 + Math.exp(-x));
+}
+
+// -------------------- Utility functions --------------------
+
+function fillArray<T>(len: number, v: T): T[] {
+	let a = new Array(len);
+	for (let i = 0; i < a.length; i++) a[i] = v;
+	return a;
+}
+
+export function map2<T1, T2, U>(array1: T1[], array2: T2[], cb: (value1: T1, value2: T2) => U): U[] {
+	if (array1.length >= array2.length)
+		return array1.map((e1, i) => cb(e1, array2[i]));
+	else
+		return array2.map((e2, i) => cb(array1[i], e2));
 }
