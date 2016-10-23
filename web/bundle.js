@@ -119,6 +119,7 @@ var NeuralNetworkDiagram = (function () {
     return NeuralNetworkDiagram;
 }());
 exports.NeuralNetworkDiagram = NeuralNetworkDiagram;
+
 },{}],2:[function(require,module,exports){
 "use strict";
 var DEFAULT_ACTIVATION_FUNCTION = sigmoid;
@@ -246,6 +247,7 @@ function sigmoid(x) {
     else
         return 1.0 / (1.0 + Math.exp(-x));
 }
+
 },{}],3:[function(require,module,exports){
 "use strict";
 var neurons_1 = require('./neurons');
@@ -280,12 +282,13 @@ $(function () {
     // -------------------- Handle click on "Test" button --------------------
     $('#buttest').click(function (_) {
         var formData = getFormData();
-        var tests = parseTestLines(formData.testLines, nn.numInputs);
+        var tests = parseLearnLines(formData.testLines, nn.numInputs);
         var testResults = [];
-        tests.forEach(function (test) { return testResults.push(nn.forward(test)); });
+        tests.forEach(function (test) { return testResults.push(nn.forward(test.inputs)); });
+        var ranges = getRanges(tests.map(function (test) { return test.outputs; }));
         var strResult = testResults
-            .map(function (result) { return result.map(function (x) { return fmtNum(x, 6); }).join('  '); })
-            .join('\n');
+            .map(function (result, i) { return result.map(function (x) { return fmtNum(x, 6); }).join('  ') +
+            compareResult(result, tests[i].outputs, ranges); }).join('\n');
         $('#tout').text(strResult);
     });
     // -------------------- Handle click on diagram button --------------------
@@ -322,7 +325,7 @@ function parseLearnLines(allLines, numInputs, numOutputs) {
     lines.forEach(function (line, i) {
         var example = parseExample(line);
         //TODO validate line by checking:
-        //	- if example is null, then the / is missing
+        //	- if example.outputs is [], then the / is missing (that is OK for tests, not OK for learning)
         //	- if the number of inputs or outputs is invalid, then some values are missing or exceeding
         //	- if some value is NaN, then there are invalid numbers
         if (example)
@@ -332,37 +335,56 @@ function parseLearnLines(allLines, numInputs, numOutputs) {
 }
 function parseExample(line) {
     var inout = line.split('/');
-    if (inout.length < 2)
-        return null;
     var inputs = parseNumbers(inout[0]);
-    var outputs = parseNumbers(inout[1]);
+    var outputs = inout.length < 2 ? [] : parseNumbers(inout[1]);
     return { inputs: inputs, outputs: outputs };
-}
-function parseTestLines(allLines, numInputs) {
-    var tests;
-    tests = [];
-    var lines = parseDataLines(allLines);
-    lines.forEach(function (line, i) {
-        var inputs = parseNumbers(line);
-        //TODO validate line by checking:
-        //	- if the number of inputs is invalid, then some values are missing or exceeding
-        //	- if some value is NaN, then there are invalid numbers
-        tests.push(inputs);
-    });
-    return tests;
 }
 function parseDataLines(allLines) {
     return allLines.split('\n').filter(function (line) {
         line = line.trim();
         return line.length > 0 && line[0] != '#';
-    });
+    }).map(function (line) { return line.replace(/\t/g, ' '); });
 }
 function parseNumbers(line) {
     return line.split(' ').filter(function (s) { return s.length > 0; }).map(function (s) { return parseFloat(s); });
 }
+// -------------------- Misc --------------------
+function getRanges(nums) {
+    if (nums.length == 0)
+        return [];
+    var MAX_START = nums[0].map(function (x) { return Number.MAX_VALUE; });
+    var MIN_START = MAX_START.map(function (x) { return -x; });
+    var mins = nums.reduce(function (prevs, currs) {
+        return prevs.map(function (p, i) { return Math.min(p, currs[i]); });
+    }, MAX_START);
+    var maxs = nums.reduce(function (prevs, currs) {
+        return prevs.map(function (p, i) { return Math.max(p, currs[i]); });
+    }, MIN_START);
+    var ranges = mins.map(function (min, i) { return maxs[i] - min; });
+    if (ranges.filter(function (x) { return isNaN(x); }).length > 0)
+        ranges = [];
+    return ranges;
+}
+function compareResult(actual, expected, ranges) {
+    if (ranges.length == 0 || expected.length == 0)
+        return '';
+    return '  /  (' +
+        actual.map(function (act, i) { return numError(act, expected[i], ranges[i]).toLocaleString('en-US', {
+            style: 'percent',
+            maximumFractionDigits: 3
+        }); }).join('  ') + ')';
+}
+function numError(actual, expected, range) {
+    return Math.abs((actual - expected) / range);
+}
 function fmtNum(n, len) {
     if (len === void 0) { len = 5; }
-    return n.toString().substr(0, len);
+    return n.toLocaleString('en-US', {
+        minimumFractionDigits: len,
+        maximumFractionDigits: len,
+        useGrouping: false
+    });
 }
+
 },{"./diagram":1,"./neurons":2}]},{},[3])
 //# sourceMappingURL=bundle.js.map

@@ -33,12 +33,13 @@ $(function() {
 	// -------------------- Handle click on "Test" button --------------------
 	$('#buttest').click(_ => {
 		let formData = getFormData();
-		let tests = parseTestLines(formData.testLines, nn.numInputs);
+		let tests = parseLearnLines(formData.testLines, nn.numInputs);
 		let testResults: number[][] = [];
-		tests.forEach(test => testResults.push(nn.forward(test)));
+		tests.forEach(test => testResults.push(nn.forward(test.inputs)));
+		let ranges = getRanges(tests.map(test => test.outputs));
 		let strResult = testResults
-			.map(result => result.map(x => fmtNum(x, 6)).join('  '))
-			.join('\n');
+			.map((result, i) => result.map(x => fmtNum(x, 6)).join('  ') +
+				compareResult(result, tests[i].outputs, ranges)).join('\n');
 		$('#tout').text(strResult);
 	});
 	// -------------------- Handle click on diagram button --------------------
@@ -72,13 +73,13 @@ function getFormData() {
 	};
 }
 
-function parseLearnLines(allLines: string, numInputs: number, numOutputs: number): Example[] {
+function parseLearnLines(allLines: string, numInputs: number, numOutputs?: number): Example[] {
 	let examples: Example[] = [];
 	let lines = parseDataLines(allLines);
 	lines.forEach((line, i) => {
 		let example = parseExample(line);
 		//TODO validate line by checking:
-		//	- if example is null, then the / is missing
+		//	- if example.outputs is [], then the / is missing (that is OK for tests, not OK for learning)
 		//	- if the number of inputs or outputs is invalid, then some values are missing or exceeding
 		//	- if some value is NaN, then there are invalid numbers
 		if (example) examples.push(example);
@@ -88,37 +89,54 @@ function parseLearnLines(allLines: string, numInputs: number, numOutputs: number
 
 function parseExample(line: string): Example | null {
 	let inout = line.split('/');
-	if (inout.length < 2) return null;
 	let inputs = parseNumbers(inout[0]);
-	let outputs = parseNumbers(inout[1]);
+	let outputs = inout.length < 2 ? [] : parseNumbers(inout[1]);
 	return { inputs, outputs };
-}
-
-function parseTestLines(allLines: string, numInputs: number): number[][] {
-	let tests: number[][];
-	tests = [];
-	let lines = parseDataLines(allLines);
-	lines.forEach((line, i) => {
-		let inputs = parseNumbers(line);
-		//TODO validate line by checking:
-		//	- if the number of inputs is invalid, then some values are missing or exceeding
-		//	- if some value is NaN, then there are invalid numbers
-		tests.push(inputs);
-	});
-	return tests;
 }
 
 function parseDataLines(allLines: string): string[] {
 	return allLines.split('\n').filter(line => {
 		line = line.trim();
 		return line.length > 0 && line[0] != '#';
-	});
+	}).map(line => line.replace(/\t/g, ' '));
 }
 
 function parseNumbers(line: string): number[] {
 	return line.split(' ').filter(s => s.length > 0).map(s => parseFloat(s));
 }
 
+// -------------------- Misc --------------------
+
+function getRanges(nums: number[][]): number[] {
+	if (nums.length == 0) return [];
+	let MAX_START = nums[0].map(x => Number.MAX_VALUE);
+	let MIN_START = MAX_START.map(x => -x);
+	let mins = nums.reduce((prevs, currs) =>
+		prevs.map((p, i) => Math.min(p, currs[i])), MAX_START);
+	let maxs = nums.reduce((prevs, currs) =>
+		prevs.map((p, i) => Math.max(p, currs[i])), MIN_START);
+	let ranges = mins.map((min, i) => maxs[i] - min);
+	if (ranges.filter(x => isNaN(x)).length > 0) ranges = [];
+	return ranges;
+}
+
+function compareResult(actual: number[], expected: number[], ranges: number[]): string {
+	if (ranges.length == 0 || expected.length == 0) return '';
+	return '  /  (' +
+		actual.map((act, i) => numError(act, expected[i], ranges[i]).toLocaleString('en-US', {
+			style: 'percent',
+			maximumFractionDigits: 3
+		})).join('  ') + ')';
+}
+
+function numError(actual: number, expected: number, range: number): number {
+	return Math.abs((actual - expected) / range);
+}
+
 function fmtNum(n: number, len = 5): string {
-	return n.toString().substr(0, len);
+	return n.toLocaleString('en-US', {
+		minimumFractionDigits: len,
+		maximumFractionDigits: len,
+		useGrouping: false
+	});
 }
