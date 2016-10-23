@@ -4,10 +4,10 @@
   "description": "Neural Network",
   "main": "index.js",
   "scripts": {
-    "start": "npm serve",
+    "start": "npm run serve",
     "build": "npm run browserify",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "browserify": "browserify -d src/nnn-web.ts -p [ tsify --target=ES5 ] | exorcist web/bundle.js.map > web/bundle.js",
+    "browserify": "browserify -d src/nnn-web.ts -p [ tsify ] | exorcist web/bundle.js.map > web/bundle.js",
     "serve": "http-server web -c-1"
   },
   "repository": {
