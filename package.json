@@ -8,7 +8,8 @@
     "build": "npm run browserify",
     "test": "echo \"Error: no test specified\" && exit 1",
     "browserify": "browserify -d src/nnn-web.ts -p [ tsify ] | exorcist web/bundle.js.map > web/bundle.js",
-    "serve": "http-server web -c-1"
+    "serve": "http-server web -c-1",
+    "install": "mkdir -p web/vendor/monaco && cp -R node_modules/monaco-editor/min/ web/vendor/monaco/"
   },
   "repository": {
     "type": "git",
@@ -33,5 +34,8 @@
     "tsify": "^2.0.2",
     "tslint": "^3.15.1",
     "typescript": "^2.0.3"
+  },
+  "dependencies": {
+    "monaco-editor": "^0.7.0"
   }
 }

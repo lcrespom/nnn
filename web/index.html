@@ -16,6 +16,8 @@
 	<!-- Bootstrap: Latest compiled and minified JavaScript -->
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
 		crossorigin="anonymous"></script></head>
+	<!-- Monaco editor -->
+	<script src="vendor/monaco/vs/loader.js"></script>
 	<!-- Custom styles -->
 	<link rel="stylesheet" href="style.css">
 	<!-- Custom JavaScript -->
@@ -33,6 +35,7 @@
 
 <div class="main">
 	<div class="content">
+		<!-- -------------------- Architecture -------------------- -->
 		<form class="form-inline">
 			<fieldset>
 				<legend>Architecture</legend>
@@ -64,6 +67,7 @@
 			</fieldset>
 		</form>
 
+		<!-- -------------------- Learn data -------------------- -->
 		<form class="form-inline">
 			<fieldset>
 				<legend>Learn data</legend>
@@ -112,6 +116,7 @@
 			</fieldset>
 		</form>
 
+		<!-- -------------------- Test -------------------- -->
 		<form class="form-inline">
 			<fieldset>
 				<legend>Test</legend>
@@ -136,6 +141,51 @@
 				<div class="form-group">
 					<button id="buttest" disabled
 						type="button" class="btn btn-primary">Test</button>
+				</div>
+			</fieldset>
+		</form>
+
+		<!-- -------------------- Learn data formula -------------------- -->
+		<form class="form-inline">
+			<fieldset>
+				<legend>Learn data formula</legend>
+				<div class="form-group">
+					<label for="samples">Samples per input:</label>
+					<input id="samples" value="10"
+						type="number" min="1" max="1000" class="form-control">
+				</div>
+				<div class="form-group">
+					<label for="tsamples">Total samples:</label>
+					<input id="tsamples" value="1000" readonly
+						type="number" min="0" max="9999999999" class="form-control">
+				</div>
+				<div class="form-group" style="width: 100%; padding-right: 1em">
+					<label for="js-editor">Formula code:</label><br>
+					<div id="js-editor" style="width: 100%; height: 20ex"
+						class="form-control">
+						<div id="monaco-here" style="width: 100%; height: 100%"></div>
+					</div>
+<script>
+	require.config({ paths: { 'vs': 'vendor/monaco/vs' }});
+    require(['vs/editor/editor.main'], function() {
+        window._js_editor = monaco.editor.create(document.getElementById('monaco-here'), {
+            value: `function calcOutputs(input1, input2, input3) {
+	let output1 = input1 + input2 + input3;
+	let output2 = input1 * input2 * input3;
+	let output3 = input1 - input2 - input3;
+	return [output1, output2, output3];
+}`,
+            language: 'typescript',
+			lineNumbers: false,
+			scrollBeyondLastLine: false,
+			renderLineHighlight: false
+        });
+    });
+</script>
+				</div>
+				<div class="form-group">
+					<button id="butformula"
+						type="button" class="btn btn-primary">Generate</button>
 				</div>
 			</fieldset>
 		</form>

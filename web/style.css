@@ -1,3 +1,7 @@
+.form-inline {
+	margin-bottom: 1em;
+}
+
 .form-inline .form-group {
 	margin-left: 1em;
 	margin-bottom: 1em;
