@@ -248,6 +248,7 @@ function fillArray(len, v) {
         a[i] = v;
     return a;
 }
+exports.fillArray = fillArray;
 function map2(array1, array2, cb) {
     if (array1.length >= array2.length)
         return array1.map(function (e1, i) { return cb(e1, array2[i]); });
@@ -294,7 +295,7 @@ $(function () {
         var testResults = [];
         tests.forEach(function (test) { return testResults.push(nn.forward(test.inputs)); });
         var ranges = getRanges(tests.map(function (test) { return test.outputs; }));
-        var strResult = neurons_1.map2(testResults, tests, function (result, test) { return result.map(function (x) { return fmtNum(x, 6); }).join('  ') +
+        var strResult = neurons_1.map2(testResults, tests, function (result, test) { return formatNums(result) +
             compareResult(result, test.outputs, ranges); }).join('\n');
         $('#tout').text(strResult);
     });
@@ -310,6 +311,23 @@ $(function () {
             new diagram_1.NeuralNetworkDiagram(nn, $diagram.get(0)).draw();
         $diagram.slideToggle();
     });
+    // -------------------- Handle click on learn formula --------------------
+    $('#samples').on('input', function (evt) {
+        var numSamples = +evt.target.value;
+        var numInputs = +getFormData().numInputs;
+        $('#tsamples').val(Math.pow(numSamples, numInputs).toLocaleString('es'));
+    });
+    $('#butformula').click(function (_) {
+        var code = _js_editor.getModel().getValue();
+        var fun;
+        // tslint:disable-next-line - Disables all rules for the following line
+        eval('fun = ' + code);
+        var learnData = generateLearnData(getFormData(), fun);
+        var learnText = learnData.map(function (example) {
+            return formatNums(example.inputs) + '  /  ' + formatNums(example.outputs);
+        }).join('\n');
+        $('#ldata').text(learnText);
+    });
     // -------------------- Enable bootstrap-styled tooltips --------------------
     $('[data-toggle="tooltip"]').tooltip();
 });
@@ -323,7 +341,8 @@ function getFormData() {
         maxIterations: $('#maxiters').val(),
         epsilon: $('#epsilon').val(),
         learnLines: $('#ldata').val(),
-        testLines: $('#tdata').val()
+        testLines: $('#tdata').val(),
+        formulaSamples: $('#samples').val()
     };
 }
 function parseLearnLines(allLines, numInputs, numOutputs) {
@@ -355,6 +374,36 @@ function parseDataLines(allLines) {
 function parseNumbers(line) {
     return line.split(' ').filter(function (s) { return s.length > 0; }).map(function (s) { return parseFloat(s); });
 }
+// -------------------- Learn data formula --------------------
+function generateLearnData(formData, func) {
+    var numInputs = +formData.numInputs;
+    var samplesPerInput = +formData.formulaSamples;
+    var totalInputs = Math.pow(samplesPerInput, numInputs);
+    var examples = [];
+    for (var i = 0; i < totalInputs; i++)
+        examples.push({ inputs: [], outputs: [] });
+    generateInputs(numInputs, samplesPerInput, examples);
+    for (var _i = 0, examples_1 = examples; _i < examples_1.length; _i++) {
+        var example = examples_1[_i];
+        example.outputs = func.apply(null, example.inputs);
+    }
+    return examples;
+}
+function generateInputs(numInputs, samplesPerInput, samples, startAt) {
+    if (startAt === void 0) { startAt = 0; }
+    var inc = 1 / (samplesPerInput - 1);
+    var x = 0;
+    var totalInputs = Math.pow(samplesPerInput, numInputs);
+    var inputsPerStep = totalInputs / samplesPerInput;
+    for (var i = 0; i < totalInputs; i++) {
+        samples[i + startAt].inputs.push(x);
+        if ((i + 1) % inputsPerStep == 0) {
+            x += inc;
+            if (numInputs > 1)
+                generateInputs(numInputs - 1, samplesPerInput, samples, startAt + i + 1 - inputsPerStep);
+        }
+    }
+}
 // -------------------- Misc --------------------
 function getRanges(nums) {
     if (nums.length == 0)
@@ -383,6 +432,10 @@ function compareResult(actual, expected, ranges) {
 }
 function numError(actual, expected, range) {
     return Math.abs((actual - expected) / range);
+}
+function formatNums(nums, len) {
+    if (len === void 0) { len = 6; }
+    return nums.map(function (x) { return fmtNum(x, len); }).join('  ');
 }
 function fmtNum(n, len) {
     if (len === void 0) { len = 5; }

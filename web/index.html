@@ -152,12 +152,12 @@
 				<div class="form-group">
 					<label for="samples">Samples per input:</label>
 					<input id="samples" value="10"
-						type="number" min="1" max="1000" class="form-control">
+						type="number" min="2" max="1000" class="form-control">
 				</div>
 				<div class="form-group">
 					<label for="tsamples">Total samples:</label>
-					<input id="tsamples" value="1000" readonly
-						type="number" min="0" max="9999999999" class="form-control">
+					<input id="tsamples" value="1.000" readonly
+						size="10" class="form-control">
 				</div>
 				<div class="form-group" style="width: 100%; padding-right: 1em">
 					<label for="js-editor">Formula code:</label><br>
@@ -170,9 +170,9 @@
     require(['vs/editor/editor.main'], function() {
         window._js_editor = monaco.editor.create(document.getElementById('monaco-here'), {
             value: `function calcOutputs(input1, input2, input3) {
-	let output1 = input1 + input2 + input3;
+	let output1 = (input1 + input2 + input3) / 3;
 	let output2 = input1 * input2 * input3;
-	let output3 = input1 - input2 - input3;
+	let output3 = input1 + input2 - input3;
 	return [output1, output2, output3];
 }`,
             language: 'typescript',

@@ -1,7 +1,7 @@
 import { NeuralNetwork, Example, map2 } from './neurons';
 import { NeuralNetworkDiagram } from './diagram';
 
-
+declare var _js_editor: any;
 let nn: NeuralNetwork;
 
 $(function() {
@@ -38,7 +38,7 @@ $(function() {
 		tests.forEach(test => testResults.push(nn.forward(test.inputs)));
 		let ranges = getRanges(tests.map(test => test.outputs));
 		let strResult = map2(testResults, tests,
-			(result, test) => result.map(x => fmtNum(x, 6)).join('  ') +
+			(result, test) => formatNums(result) +
 				compareResult(result, test.outputs, ranges)).join('\n');
 		$('#tout').text(strResult);
 	});
@@ -52,6 +52,23 @@ $(function() {
 		if (hidden)
 			new NeuralNetworkDiagram(nn, <HTMLCanvasElement>$diagram.get(0)).draw();
 		$diagram.slideToggle();
+	});
+	// -------------------- Handle click on learn formula --------------------
+	$('#samples').on('input', evt => {
+		let numSamples = +(<HTMLInputElement>evt.target).value;
+		let numInputs = +getFormData().numInputs;
+		$('#tsamples').val(Math.pow(numSamples, numInputs).toLocaleString('es'));
+	});
+	$('#butformula').click(_ => {
+		let code = _js_editor.getModel().getValue();
+		let fun;
+		// tslint:disable-next-line - Disables all rules for the following line
+		eval('fun = ' + code);
+		let learnData = generateLearnData(getFormData(), fun);
+		let learnText = learnData.map(example =>
+			formatNums(example.inputs) + '  /  ' + formatNums(example.outputs)
+		).join('\n');
+		$('#ldata').text(learnText);
 	});
 	// -------------------- Enable bootstrap-styled tooltips --------------------
 	$('[data-toggle="tooltip"]').tooltip();
@@ -69,7 +86,8 @@ function getFormData() {
 		maxIterations: $('#maxiters').val(),
 		epsilon: $('#epsilon').val(),
 		learnLines: $('#ldata').val(),
-		testLines: $('#tdata').val()
+		testLines: $('#tdata').val(),
+		formulaSamples: $('#samples').val()
 	};
 }
 
@@ -105,6 +123,38 @@ function parseNumbers(line: string): number[] {
 	return line.split(' ').filter(s => s.length > 0).map(s => parseFloat(s));
 }
 
+
+// -------------------- Learn data formula --------------------
+
+function generateLearnData(formData: any, func: Function): Example[] {
+	let numInputs = +formData.numInputs;
+	let samplesPerInput = +formData.formulaSamples;
+	let totalInputs = Math.pow(samplesPerInput, numInputs);
+	let examples: Example[] = [];
+	for (let i = 0; i < totalInputs; i++) examples.push({ inputs: [], outputs: [] });
+	generateInputs(numInputs, samplesPerInput, examples);
+	for (let example of examples)
+		example.outputs = func.apply(null, example.inputs);
+	return examples;
+}
+
+function generateInputs(numInputs: number, samplesPerInput: number,
+	samples: Example[], startAt = 0) {
+	let inc = 1 / (samplesPerInput - 1);
+	let x = 0;
+	let totalInputs = Math.pow(samplesPerInput, numInputs);
+	let inputsPerStep = totalInputs / samplesPerInput;
+	for (let i = 0; i < totalInputs; i++) {
+		samples[i + startAt].inputs.push(x);
+		if ((i + 1) % inputsPerStep == 0) {
+			x += inc;
+			if (numInputs > 1)
+				generateInputs(numInputs - 1, samplesPerInput, samples,
+					startAt + i + 1 - inputsPerStep);
+		}
+	}
+}
+
 // -------------------- Misc --------------------
 
 function getRanges(nums: number[][]): number[] {
@@ -131,6 +181,10 @@ function compareResult(actual: number[], expected: number[], ranges: number[]): 
 
 function numError(actual: number, expected: number, range: number): number {
 	return Math.abs((actual - expected) / range);
+}
+
+function formatNums(nums: number[], len = 6): string {
+	return nums.map(x => fmtNum(x, len)).join('  ');
 }
 
 function fmtNum(n: number, len = 5): string {

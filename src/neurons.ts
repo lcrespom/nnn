@@ -156,7 +156,7 @@ function sigmoid(x: number): number {
 
 // -------------------- Utility functions --------------------
 
-function fillArray<T>(len: number, v: T): T[] {
+export function fillArray<T>(len: number, v: T): T[] {
 	let a = new Array(len);
 	for (let i = 0; i < a.length; i++) a[i] = v;
 	return a;
