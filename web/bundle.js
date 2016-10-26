@@ -229,6 +229,30 @@ var NeuralNetwork = (function () {
         if (iteration % 100 == 0)
             console.log("Learn iteration " + iteration + " - error: " + totalError);
     };
+    // -------------------- Import / export --------------------
+    NeuralNetwork.prototype.toJSON = function () {
+        return {
+            numInputs: this.numInputs,
+            layerSizes: this.layerSizes,
+            epsilon: this.epsilon,
+            acceptableError: this.acceptableError,
+            maxLearnIterations: this.maxLearnIterations,
+            layers: this.layers,
+            learnIteration: this.learnIteration,
+            learnError: this.learnError
+        };
+    };
+    /* tslint:disable:member-ordering */
+    NeuralNetwork.fromJSON = function (json) {
+        var nn = new NeuralNetwork(json.numInputs, json.layerSizes);
+        nn.epsilon = json.epsilon;
+        nn.acceptableError = json.acceptableError;
+        nn.maxLearnIterations = json.maxLearnIterations;
+        nn.layers = json.layers;
+        nn.learnIteration = json.learnIteration;
+        nn.learnError = json.learnError;
+        return nn;
+    };
     return NeuralNetwork;
 }());
 exports.NeuralNetwork = NeuralNetwork;
@@ -261,6 +285,7 @@ exports.map2 = map2;
 "use strict";
 var neurons_1 = require('./neurons');
 var diagram_1 = require('./diagram');
+var text_utils_1 = require('./text-utils');
 var nn;
 $(function () {
     // $('input,textarea').on('input', evt => {
@@ -268,32 +293,13 @@ $(function () {
     // 	//TODO: validate and activate buttons
     // });
     // -------------------- Handle click on "Learn" button --------------------
-    $('#butlearn').click(function (evt) {
-        $('#butlearn').text('Learning...');
-        var formData = getFormData();
-        var numLayers = parseNumbers(formData.numHidden);
-        numLayers.push(+formData.numOutputs);
-        nn = new neurons_1.NeuralNetwork(+formData.numInputs, numLayers);
-        nn.acceptableError = +formData.maxError;
-        nn.maxLearnIterations = +formData.maxIterations;
-        nn.epsilon = +formData.epsilon;
-        var examples = parseLearnLines(formData.learnLines, +formData.numInputs, +formData.numOutputs);
-        evt.target.style.cursor = 'wait';
-        setTimeout(function () {
-            nn.learn(examples);
-            console.log("*** Learned in " + nn.learnIteration + " iterations, with an error of " + nn.learnError);
-            $('#butlearn').text('Learn');
-            $('#liters').val(nn.learnIteration);
-            $('#lerror').val(fmtNum(nn.learnError, 9));
-            $('#buttest, #butdiagram').attr('disabled', false);
-            new diagram_1.NeuralNetworkDiagram(nn, $('#nn-diagram').get(0)).draw();
-            evt.target.style.cursor = 'initial';
-        }, 10);
+    $('#butlearn').click(function (_) {
+        doLearn();
     });
     // -------------------- Handle click on "Test" button --------------------
     $('#buttest').click(function (_) {
         var formData = getFormData();
-        var tests = parseLearnLines(formData.testLines, nn.numInputs);
+        var tests = text_utils_1.default.parseLearnLines(formData.testLines, nn.numInputs);
         var testResults = [];
         tests.forEach(function (test) { return testResults.push(nn.forward(test.inputs)); });
         var ranges = getRanges(tests.map(function (test) { return test.outputs; }));
@@ -333,6 +339,32 @@ $(function () {
     // -------------------- Enable bootstrap-styled tooltips --------------------
     $('[data-toggle="tooltip"]').tooltip();
 });
+// ------------------------- Learning -------------------------
+function doLearn() {
+    $('#butlearn').text('Learning...').attr('disabled', 'disabled');
+    var formData = getFormData();
+    var worker = new Worker('worker.js');
+    worker.postMessage({ command: 'start', params: formData });
+    worker.onmessage = function (msg) {
+        console.log('******* Message from worker:', msg);
+        switch (msg.data.command) {
+            case 'nn-progress': return nnProgress(msg.data.params);
+            case 'nn-learned': return nnLearned(msg.data.params);
+            default: throw Error('Unknown command: ' + msg.data.command);
+        }
+    };
+}
+function nnProgress(params) {
+    //TODO update UI
+}
+function nnLearned(nnJSON) {
+    nn = neurons_1.NeuralNetwork.fromJSON(nnJSON);
+    $('#butlearn').text('Learn').removeAttr('disabled');
+    $('#liters').val(nn.learnIteration);
+    $('#lerror').val(fmtNum(nn.learnError, 9));
+    $('#buttest, #butdiagram').removeAttr('disabled');
+    new diagram_1.NeuralNetworkDiagram(nn, $('#nn-diagram').get(0)).draw();
+}
 // ------------------------- User input parsing -------------------------
 function getFormData() {
     return {
@@ -346,35 +378,6 @@ function getFormData() {
         testLines: $('#tdata').val(),
         formulaSamples: $('#samples').val()
     };
-}
-function parseLearnLines(allLines, numInputs, numOutputs) {
-    var examples = [];
-    var lines = parseDataLines(allLines);
-    lines.forEach(function (line, i) {
-        var example = parseExample(line);
-        //TODO validate line by checking:
-        //	- if example.outputs is [], then the / is missing (that is OK for tests, not OK for learning)
-        //	- if the number of inputs or outputs is invalid, then some values are missing or exceeding
-        //	- if some value is NaN, then there are invalid numbers
-        if (example)
-            examples.push(example);
-    });
-    return examples;
-}
-function parseExample(line) {
-    var inout = line.split('/');
-    var inputs = parseNumbers(inout[0]);
-    var outputs = inout.length < 2 ? [] : parseNumbers(inout[1]);
-    return { inputs: inputs, outputs: outputs };
-}
-function parseDataLines(allLines) {
-    return allLines.split('\n').filter(function (line) {
-        line = line.trim();
-        return line.length > 0 && line[0] != '#';
-    }).map(function (line) { return line.replace(/\t/g, ' '); });
-}
-function parseNumbers(line) {
-    return line.split(' ').filter(function (s) { return s.length > 0; }).map(function (s) { return parseFloat(s); });
 }
 // -------------------- Learn data formula --------------------
 function generateLearnData(formData, func) {
@@ -448,5 +451,44 @@ function fmtNum(n, len) {
     });
 }
 
-},{"./diagram":1,"./neurons":2}]},{},[3])
+},{"./diagram":1,"./neurons":2,"./text-utils":4}],4:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.default = {
+    parseLearnLines: parseLearnLines,
+    parseExample: parseExample,
+    parseDataLines: parseDataLines,
+    parseNumbers: parseNumbers
+};
+function parseLearnLines(allLines, numInputs, numOutputs) {
+    var examples = [];
+    var lines = parseDataLines(allLines);
+    lines.forEach(function (line, i) {
+        var example = parseExample(line);
+        //TODO validate line by checking:
+        //	- if example.outputs is [], then the / is missing (that is OK for tests, not OK for learning)
+        //	- if the number of inputs or outputs is invalid, then some values are missing or exceeding
+        //	- if some value is NaN, then there are invalid numbers
+        if (example)
+            examples.push(example);
+    });
+    return examples;
+}
+function parseExample(line) {
+    var inout = line.split('/');
+    var inputs = parseNumbers(inout[0]);
+    var outputs = inout.length < 2 ? [] : parseNumbers(inout[1]);
+    return { inputs: inputs, outputs: outputs };
+}
+function parseDataLines(allLines) {
+    return allLines.split('\n').filter(function (line) {
+        line = line.trim();
+        return line.length > 0 && line[0] != '#';
+    }).map(function (line) { return line.replace(/\t/g, ' '); });
+}
+function parseNumbers(line) {
+    return line.split(' ').filter(function (s) { return s.length > 0; }).map(function (s) { return parseFloat(s); });
+}
+
+},{}]},{},[3])
 //# sourceMappingURL=bundle.js.map

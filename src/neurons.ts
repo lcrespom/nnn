@@ -143,6 +143,32 @@ export class NeuralNetwork {
 			console.log(`Learn iteration ${iteration} - error: ${totalError}`);
 	}
 
+	// -------------------- Import / export --------------------
+
+	toJSON() {
+		return {
+			numInputs: this.numInputs,
+			layerSizes: this.layerSizes,
+			epsilon: this.epsilon,
+			acceptableError: this.acceptableError,
+			maxLearnIterations: this.maxLearnIterations,
+			layers: this.layers,
+			learnIteration: this.learnIteration,
+			learnError: this.learnError
+		};
+	}
+
+	/* tslint:disable:member-ordering */
+	static fromJSON(json: any): NeuralNetwork {
+		let nn = new NeuralNetwork(json.numInputs, json.layerSizes);
+		nn.epsilon = json.epsilon;
+		nn.acceptableError = json.acceptableError;
+		nn.maxLearnIterations = json.maxLearnIterations;
+		nn.layers = json.layers;
+		nn.learnIteration = json.learnIteration;
+		nn.learnError = json.learnError;
+		return nn;
+	}
 }
 
 

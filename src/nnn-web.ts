@@ -1,5 +1,6 @@
 import { NeuralNetwork, Example, map2 } from './neurons';
 import { NeuralNetworkDiagram } from './diagram';
+import txtutils from './text-utils';
 
 declare var _js_editor: any;
 let nn: NeuralNetwork;
@@ -11,29 +12,12 @@ $(function() {
 	// });
 	// -------------------- Handle click on "Learn" button --------------------
 	$('#butlearn').click(_ => {
-		$('#butlearn').text('Learning...');
-		let formData = getFormData();
-		let numLayers = parseNumbers(formData.numHidden);
-		numLayers.push(+formData.numOutputs);
-		nn = new NeuralNetwork(+formData.numInputs, numLayers);
-		nn.acceptableError = +formData.maxError;
-		nn.maxLearnIterations = +formData.maxIterations;
-		nn.epsilon = +formData.epsilon;
-		let examples = parseLearnLines(formData.learnLines, +formData.numInputs, +formData.numOutputs);
-		setTimeout(() => {
-			nn.learn(examples);
-			console.log(`*** Learned in ${nn.learnIteration} iterations, with an error of ${nn.learnError}`);
-			$('#butlearn').text('Learn');
-			$('#liters').val(nn.learnIteration);
-			$('#lerror').val(fmtNum(nn.learnError, 9));
-			$('#buttest, #butdiagram').attr('disabled', <any>false);
-			new NeuralNetworkDiagram(nn, <HTMLCanvasElement>$('#nn-diagram').get(0)).draw();
-		}, 10);
+		doLearn();
 	});
 	// -------------------- Handle click on "Test" button --------------------
 	$('#buttest').click(_ => {
 		let formData = getFormData();
-		let tests = parseLearnLines(formData.testLines, nn.numInputs);
+		let tests = txtutils.parseLearnLines(formData.testLines, nn.numInputs);
 		let testResults: number[][] = [];
 		tests.forEach(test => testResults.push(nn.forward(test.inputs)));
 		let ranges = getRanges(tests.map(test => test.outputs));
@@ -75,6 +59,37 @@ $(function() {
 });
 
 
+// ------------------------- Learning -------------------------
+
+function doLearn() {
+	$('#butlearn').text('Learning...').attr('disabled', 'disabled');
+	let formData = getFormData();
+	let worker = new Worker('worker.js');
+	worker.postMessage({ command: 'start', params: formData });
+	worker.onmessage = msg => {
+		console.log('******* Message from worker:', msg);
+		switch (msg.data.command) {
+			case 'nn-progress': return nnProgress(msg.data.params);
+			case 'nn-learned': return nnLearned(msg.data.params);
+			default: throw Error('Unknown command: ' + msg.data.command);
+		}
+	};
+}
+
+function nnProgress(params) {
+	//TODO update UI
+}
+
+function nnLearned(nnJSON) {
+	nn = NeuralNetwork.fromJSON(nnJSON);
+	$('#butlearn').text('Learn').removeAttr('disabled');
+	$('#liters').val(nn.learnIteration);
+	$('#lerror').val(fmtNum(nn.learnError, 9));
+	$('#buttest, #butdiagram').removeAttr('disabled');
+	new NeuralNetworkDiagram(nn, <HTMLCanvasElement>$('#nn-diagram').get(0)).draw();
+}
+
+
 // ------------------------- User input parsing -------------------------
 
 function getFormData() {
@@ -89,38 +104,6 @@ function getFormData() {
 		testLines: $('#tdata').val(),
 		formulaSamples: $('#samples').val()
 	};
-}
-
-function parseLearnLines(allLines: string, numInputs: number, numOutputs?: number): Example[] {
-	let examples: Example[] = [];
-	let lines = parseDataLines(allLines);
-	lines.forEach((line, i) => {
-		let example = parseExample(line);
-		//TODO validate line by checking:
-		//	- if example.outputs is [], then the / is missing (that is OK for tests, not OK for learning)
-		//	- if the number of inputs or outputs is invalid, then some values are missing or exceeding
-		//	- if some value is NaN, then there are invalid numbers
-		if (example) examples.push(example);
-	});
-	return examples;
-}
-
-function parseExample(line: string): Example | null {
-	let inout = line.split('/');
-	let inputs = parseNumbers(inout[0]);
-	let outputs = inout.length < 2 ? [] : parseNumbers(inout[1]);
-	return { inputs, outputs };
-}
-
-function parseDataLines(allLines: string): string[] {
-	return allLines.split('\n').filter(line => {
-		line = line.trim();
-		return line.length > 0 && line[0] != '#';
-	}).map(line => line.replace(/\t/g, ' '));
-}
-
-function parseNumbers(line: string): number[] {
-	return line.split(' ').filter(s => s.length > 0).map(s => parseFloat(s));
 }
 
 

@@ -5,9 +5,10 @@
   "main": "index.js",
   "scripts": {
     "start": "npm run serve",
-    "build": "npm run browserify",
+    "build": "npm run build-bundle && npm run build-worker",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "browserify": "browserify -d src/nnn-web.ts -p [ tsify ] | exorcist web/bundle.js.map > web/bundle.js",
+    "build-bundle": "browserify -d src/nnn-web.ts -p [ tsify ] | exorcist web/bundle.js.map > web/bundle.js",
+    "build-worker": "browserify -d src/worker.ts -p [ tsify ] | exorcist web/worker.js.map > web/worker.js",
     "serve": "http-server web -c-1",
     "install": "mkdir -p web/vendor/monaco && cp -R node_modules/monaco-editor/min/ web/vendor/monaco/"
   },
