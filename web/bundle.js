@@ -268,7 +268,7 @@ $(function () {
     // 	//TODO: validate and activate buttons
     // });
     // -------------------- Handle click on "Learn" button --------------------
-    $('#butlearn').click(function (_) {
+    $('#butlearn').click(function (evt) {
         $('#butlearn').text('Learning...');
         var formData = getFormData();
         var numLayers = parseNumbers(formData.numHidden);
@@ -278,6 +278,7 @@ $(function () {
         nn.maxLearnIterations = +formData.maxIterations;
         nn.epsilon = +formData.epsilon;
         var examples = parseLearnLines(formData.learnLines, +formData.numInputs, +formData.numOutputs);
+        evt.target.style.cursor = 'wait';
         setTimeout(function () {
             nn.learn(examples);
             console.log("*** Learned in " + nn.learnIteration + " iterations, with an error of " + nn.learnError);
@@ -286,6 +287,7 @@ $(function () {
             $('#lerror').val(fmtNum(nn.learnError, 9));
             $('#buttest, #butdiagram').attr('disabled', false);
             new diagram_1.NeuralNetworkDiagram(nn, $('#nn-diagram').get(0)).draw();
+            evt.target.style.cursor = 'initial';
         }, 10);
     });
     // -------------------- Handle click on "Test" button --------------------
