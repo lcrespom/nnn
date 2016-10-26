@@ -17,10 +17,6 @@ adjust the network parameters and provide learn and test data.
 	- Validation & error message reporting
 	- Report time spent learning
 	- Button 'Copy from learn' in test section
-	- Split learn loop into smaller loops, so the UI is updated while learning
-		- use webworkers
-		- change icon to hourglass while performing calculations
-		- update iterations and error on each loop
-		- cancel button
+	- "Stop learning" button
 	- Draw diagram of learning error curve
 	- Load/save network data: architecture, learned weights, etc.

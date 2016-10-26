@@ -203,8 +203,8 @@ function parseNumbers(line) {
 var neurons_1 = require('./neurons');
 var text_utils_1 = require('./text-utils');
 var nn;
+var lastReport = Date.now();
 self.onmessage = function (msg) {
-    console.log('*** Worker got message:', msg);
     switch (msg.data.command) {
         case 'start': return doStart(msg.data.params);
         default: throw Error('Unknown command: ' + msg.data.command);
@@ -214,6 +214,7 @@ function doStart(formData) {
     var numLayers = text_utils_1.default.parseNumbers(formData.numHidden);
     numLayers.push(+formData.numOutputs);
     nn = new neurons_1.NeuralNetwork(+formData.numInputs, numLayers);
+    nn.reportLearn = wwReportLearn;
     nn.acceptableError = +formData.maxError;
     nn.maxLearnIterations = +formData.maxIterations;
     nn.epsilon = +formData.epsilon;
@@ -221,6 +222,14 @@ function doStart(formData) {
     nn.learn(examples);
     console.log("*** Learned in " + nn.learnIteration + " iterations, with an error of " + nn.learnError);
     postMessage({ command: 'nn-learned', params: nn.toJSON() });
+    self.close();
+}
+function wwReportLearn(iteration, totalError) {
+    var now = Date.now();
+    if (now - lastReport > 500) {
+        lastReport = now;
+        postMessage({ command: 'nn-progress', params: { iteration: iteration, totalError: totalError } });
+    }
 }
 
 },{"./neurons":1,"./text-utils":2}]},{},[3])

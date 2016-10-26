@@ -11,9 +11,7 @@ $(function() {
 	// 	//TODO: validate and activate buttons
 	// });
 	// -------------------- Handle click on "Learn" button --------------------
-	$('#butlearn').click(_ => {
-		doLearn();
-	});
+	$('#butlearn').click(doLearn);
 	// -------------------- Handle click on "Test" button --------------------
 	$('#buttest').click(_ => {
 		let formData = getFormData();
@@ -67,7 +65,6 @@ function doLearn() {
 	let worker = new Worker('worker.js');
 	worker.postMessage({ command: 'start', params: formData });
 	worker.onmessage = msg => {
-		console.log('******* Message from worker:', msg);
 		switch (msg.data.command) {
 			case 'nn-progress': return nnProgress(msg.data.params);
 			case 'nn-learned': return nnLearned(msg.data.params);
@@ -77,14 +74,15 @@ function doLearn() {
 }
 
 function nnProgress(params) {
-	//TODO update UI
+	$('#liters').val(params.iteration);
+	$('#lerror').val(fmtNum(params.totalError, 7));
 }
 
 function nnLearned(nnJSON) {
 	nn = NeuralNetwork.fromJSON(nnJSON);
 	$('#butlearn').text('Learn').removeAttr('disabled');
 	$('#liters').val(nn.learnIteration);
-	$('#lerror').val(fmtNum(nn.learnError, 9));
+	$('#lerror').val(fmtNum(nn.learnError, 7));
 	$('#buttest, #butdiagram').removeAttr('disabled');
 	new NeuralNetworkDiagram(nn, <HTMLCanvasElement>$('#nn-diagram').get(0)).draw();
 }

@@ -138,7 +138,7 @@ export class NeuralNetwork {
 		return biasedValues;
 	}
 
-	reportLearn(iteration, totalError) {
+	reportLearn(iteration: number, totalError: number) {
 		if (iteration % 100 == 0)
 			console.log(`Learn iteration ${iteration} - error: ${totalError}`);
 	}
