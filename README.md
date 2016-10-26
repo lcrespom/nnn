@@ -7,16 +7,15 @@ its weights from sample input and output data. After the learning phase, the net
 can be used to generate the output from new input data.
 
 The network itself is implemented in file `neurons.ts`, and file `nnn-web.ts` controls a
-simple [web-based user interface](http://lcrespom.github.io/nnn), which can be used to
-adjust the network parameters and provide learn and test data.
+[web-based user interface](http://lcrespom.github.io/nnn), which can be used to adjust
+the network parameters and provide learn and test data.
 
 
 ## ToDo
-- Accept a variable number of hidden layers => test using realistic model
 - Web UI
 	- Validation & error message reporting
 	- Report time spent learning
-	- Button 'Copy from learn' in test section
-	- "Stop learning" button
+	- 'Stop learning' button in learn section
+	- 'Copy from learn' button in test section
 	- Draw diagram of learning error curve
 	- Load/save network data: architecture, learned weights, etc.
