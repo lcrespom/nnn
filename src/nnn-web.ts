@@ -4,14 +4,21 @@ import txtutils from './text-utils';
 
 declare var _js_editor: any;
 let nn: NeuralNetwork;
+let worker: Worker;
+let learning = false;
 
 $(function() {
 	// $('input,textarea').on('input', evt => {
 	// 	let formData = getFormData();
 	// 	//TODO: validate and activate buttons
 	// });
-	// -------------------- Handle click on "Learn" button --------------------
+	// --------------- Handle click on "Learn" and "Stop" buttons ---------------
 	$('#butlearn').click(doLearn);
+	$('#butstop').click(_ => {
+		worker.terminate();
+		exitLearnMode();
+		nnProgress({ iteration: '', totalError: '' });
+	});
 	// -------------------- Handle click on "Test" button --------------------
 	$('#buttest').click(_ => {
 		let formData = getFormData();
@@ -70,9 +77,9 @@ $(function() {
 // ------------------------- Learning -------------------------
 
 function doLearn() {
-	$('#butlearn').text('Learning...').attr('disabled', 'disabled');
+	enterLearnMode();
 	let formData = getFormData();
-	let worker = new Worker('worker.js');
+	worker = new Worker('worker.js');
 	worker.postMessage({ command: 'start', params: formData });
 	worker.onmessage = msg => {
 		switch (msg.data.command) {
@@ -83,6 +90,20 @@ function doLearn() {
 	};
 }
 
+function enterLearnMode() {
+	learning = true;
+	$('#butlearn').text('Learning...').attr('disabled', 'disabled');
+	setTimeout(_ => {
+		if (learning) $('#butstop').fadeIn('slow');
+	}, 1000);
+}
+
+function exitLearnMode() {
+	learning = false;
+	$('#butlearn').text('Learn').removeAttr('disabled');
+	$('#butstop').fadeOut('fast');
+}
+
 function nnProgress(params) {
 	$('#liters').val(params.iteration);
 	$('#lerror').val(fmtNum(params.totalError, 7));
@@ -90,7 +111,7 @@ function nnProgress(params) {
 
 function nnLearned(nnJSON) {
 	nn = NeuralNetwork.fromJSON(nnJSON);
-	$('#butlearn').text('Learn').removeAttr('disabled');
+	exitLearnMode();
 	$('#liters').val(nn.learnIteration);
 	$('#lerror').val(fmtNum(nn.learnError, 7));
 	$('#buttest, #butdiagram').removeAttr('disabled');

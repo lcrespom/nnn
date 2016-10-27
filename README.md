@@ -15,7 +15,8 @@ the network parameters and provide learn and test data.
 - Web UI
 	- Validation & error message reporting
 	- Report time spent learning
-	- 'Stop learning' button in learn section
+	- Transfer whole neural network inside progress message,
+		so that if stopped, it can show what it has learned
 	- 'Copy from learn' button in test section
 	- Draw diagram of learning error curve
 	- Load/save network data: architecture, learned weights, etc.

@@ -285,13 +285,20 @@ var neurons_1 = require('./neurons');
 var diagram_1 = require('./diagram');
 var text_utils_1 = require('./text-utils');
 var nn;
+var worker;
+var learning = false;
 $(function () {
     // $('input,textarea').on('input', evt => {
     // 	let formData = getFormData();
     // 	//TODO: validate and activate buttons
     // });
-    // -------------------- Handle click on "Learn" button --------------------
+    // --------------- Handle click on "Learn" and "Stop" buttons ---------------
     $('#butlearn').click(doLearn);
+    $('#butstop').click(function (_) {
+        worker.terminate();
+        exitLearnMode();
+        nnProgress({ iteration: '', totalError: '' });
+    });
     // -------------------- Handle click on "Test" button --------------------
     $('#buttest').click(function (_) {
         var formData = getFormData();
@@ -347,9 +354,9 @@ $(function () {
 });
 // ------------------------- Learning -------------------------
 function doLearn() {
-    $('#butlearn').text('Learning...').attr('disabled', 'disabled');
+    enterLearnMode();
     var formData = getFormData();
-    var worker = new Worker('worker.js');
+    worker = new Worker('worker.js');
     worker.postMessage({ command: 'start', params: formData });
     worker.onmessage = function (msg) {
         switch (msg.data.command) {
@@ -359,13 +366,26 @@ function doLearn() {
         }
     };
 }
+function enterLearnMode() {
+    learning = true;
+    $('#butlearn').text('Learning...').attr('disabled', 'disabled');
+    setTimeout(function (_) {
+        if (learning)
+            $('#butstop').fadeIn('slow');
+    }, 1000);
+}
+function exitLearnMode() {
+    learning = false;
+    $('#butlearn').text('Learn').removeAttr('disabled');
+    $('#butstop').fadeOut('fast');
+}
 function nnProgress(params) {
     $('#liters').val(params.iteration);
     $('#lerror').val(fmtNum(params.totalError, 7));
 }
 function nnLearned(nnJSON) {
     nn = neurons_1.NeuralNetwork.fromJSON(nnJSON);
-    $('#butlearn').text('Learn').removeAttr('disabled');
+    exitLearnMode();
     $('#liters').val(nn.learnIteration);
     $('#lerror').val(fmtNum(nn.learnError, 7));
     $('#buttest, #butdiagram').removeAttr('disabled');

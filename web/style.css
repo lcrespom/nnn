@@ -29,7 +29,7 @@
 	margin: 0 auto;
 }
 
-.btn-primary {
+.btn-primary, .btn-warning {
 	width: 7em;
 }
 
