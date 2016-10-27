@@ -119,7 +119,6 @@ var NeuralNetworkDiagram = (function () {
     return NeuralNetworkDiagram;
 }());
 exports.NeuralNetworkDiagram = NeuralNetworkDiagram;
-
 },{}],2:[function(require,module,exports){
 "use strict";
 var DEFAULT_ACTIVATION_FUNCTION = sigmoid;
@@ -280,7 +279,6 @@ function map2(array1, array2, cb) {
         return array2.map(function (e2, i) { return cb(array1[i], e2); });
 }
 exports.map2 = map2;
-
 },{}],3:[function(require,module,exports){
 "use strict";
 var neurons_1 = require('./neurons');
@@ -336,6 +334,16 @@ $(function () {
     });
     // -------------------- Enable bootstrap-styled tooltips --------------------
     $('[data-toggle="tooltip"]').tooltip();
+    // -------------------- Handle formula editor resize --------------------
+    var $formula = $('#js-editor');
+    var feH = $formula.height();
+    setInterval(function (_) {
+        var newH = $formula.height();
+        if (feH != newH) {
+            feH = newH;
+            _js_editor.layout();
+        }
+    }, 1000);
 });
 // ------------------------- Learning -------------------------
 function doLearn() {
@@ -448,7 +456,6 @@ function fmtNum(n, len) {
         useGrouping: false
     });
 }
-
 },{"./diagram":1,"./neurons":2,"./text-utils":4}],4:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
@@ -487,6 +494,5 @@ function parseDataLines(allLines) {
 function parseNumbers(line) {
     return line.split(' ').filter(function (s) { return s.length > 0; }).map(function (s) { return parseFloat(s); });
 }
-
 },{}]},{},[3])
 //# sourceMappingURL=bundle.js.map

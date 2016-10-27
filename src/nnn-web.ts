@@ -54,6 +54,16 @@ $(function() {
 	});
 	// -------------------- Enable bootstrap-styled tooltips --------------------
 	$('[data-toggle="tooltip"]').tooltip();
+	// -------------------- Handle formula editor resize --------------------
+	let $formula = $('#js-editor');
+	let feH = $formula.height();
+	setInterval(_ => {
+		let newH = $formula.height();
+		if (feH != newH) {
+			feH = newH;
+			_js_editor.layout();
+		}
+	}, 1000);
 });
 
 
