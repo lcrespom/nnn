@@ -330,17 +330,14 @@ $(function () {
     });
     $('#butformula').click(function (_) {
         var code = _js_editor.getModel().getValue();
-        var fun;
         // tslint:disable-next-line - Disables all rules for the following line
-        eval('fun = ' + code);
+        var fun = eval(code);
         var learnData = generateLearnData(getFormData(), fun);
         var learnText = learnData.map(function (example) {
             return formatNums(example.inputs) + '  /  ' + formatNums(example.outputs);
         }).join('\n');
         $('#ldata').text(learnText);
     });
-    // -------------------- Enable bootstrap-styled tooltips --------------------
-    $('[data-toggle="tooltip"]').tooltip();
     // -------------------- Handle formula editor resize --------------------
     var $formula = $('#js-editor');
     var feH = $formula.height();
@@ -351,6 +348,8 @@ $(function () {
             _js_editor.layout();
         }
     }, 1000);
+    // -------------------- Enable bootstrap-styled tooltips --------------------
+    $('[data-toggle="tooltip"]').tooltip();
 });
 // ------------------------- Learning -------------------------
 function doLearn() {

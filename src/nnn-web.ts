@@ -59,8 +59,6 @@ $(function() {
 		).join('\n');
 		$('#ldata').text(learnText);
 	});
-	// -------------------- Enable bootstrap-styled tooltips --------------------
-	$('[data-toggle="tooltip"]').tooltip();
 	// -------------------- Handle formula editor resize --------------------
 	let $formula = $('#js-editor');
 	let feH = $formula.height();
@@ -71,6 +69,8 @@ $(function() {
 			_js_editor.layout();
 		}
 	}, 1000);
+	// -------------------- Enable bootstrap-styled tooltips --------------------
+	$('[data-toggle="tooltip"]').tooltip();
 });
 
 
