@@ -3,6 +3,7 @@
 var DEFAULT_ACTIVATION_FUNCTION = sigmoid;
 var Neuron = (function () {
     function Neuron(numWeights) {
+        this.disabled = false;
         this.output = NaN;
         this.weights = [];
         for (var i = 0; i < numWeights; i++)
@@ -36,7 +37,10 @@ var NeuralNetwork = (function () {
     // -------------------- Forward propagation --------------------
     NeuralNetwork.prototype.forwardNeuron = function (neuron, inputs) {
         var weightedSum = inputs.reduce(function (accum, input, i) { return accum + input * neuron.weights[i]; }, 0);
-        neuron.output = this.activationFunc(weightedSum);
+        if (neuron.disabled)
+            neuron.output = 0;
+        else
+            neuron.output = this.activationFunc(weightedSum);
         return neuron.output;
     };
     NeuralNetwork.prototype.forward = function (inputs) {
@@ -158,6 +162,7 @@ function map2(array1, array2, cb) {
         return array2.map(function (e2, i) { return cb(array1[i], e2); });
 }
 exports.map2 = map2;
+
 },{}],2:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
@@ -196,6 +201,7 @@ function parseDataLines(allLines) {
 function parseNumbers(line) {
     return line.split(' ').filter(function (s) { return s.length > 0; }).map(function (s) { return parseFloat(s); });
 }
+
 },{}],3:[function(require,module,exports){
 "use strict";
 var neurons_1 = require('./neurons');
@@ -229,5 +235,6 @@ function wwReportLearn(iteration, totalError) {
         postMessage({ command: 'nn-progress', params: { iteration: iteration, totalError: totalError } });
     }
 }
+
 },{"./neurons":1,"./text-utils":2}]},{},[3])
 //# sourceMappingURL=worker.js.map

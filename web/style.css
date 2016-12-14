@@ -39,6 +39,10 @@
 	margin-left: 2em;
 }
 
+.diagram-select {
+	cursor: pointer;
+}
+
 #js-editor {
 	width: 100%;
 	height: 20ex;

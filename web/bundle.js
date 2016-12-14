@@ -2,18 +2,23 @@
 "use strict";
 var BORDER_COLOR = 'black';
 var NEURON_COLOR = '#337AB7';
+var DISABLED_COLOR = '#AAA';
 var INPUT_COLOR = NEURON_COLOR;
 var BIAS_COLOR = '#2DD';
 var NEGATIVE_WEIGHT_HUE = 0;
 var POSITIVE_WEIGHT_HUE = 240;
+var SELECT_CLASS = 'diagram-select';
 var NeuralNetworkDiagram = (function () {
     function NeuralNetworkDiagram(net, canvas) {
         this.net = net;
         this.canvas = canvas;
+        this.mouseX = -1;
+        this.mouseY = -1;
         var ctx = canvas.getContext('2d');
         if (ctx)
             this.ctx = ctx;
         this.numCols = this.net.layerSizes.length + 1;
+        this.registerMouse();
         // Calculate radius
         var maxRows = net.numInputs;
         net.layers.forEach(function (layer) { return maxRows = Math.max(maxRows, layer.length); });
@@ -71,16 +76,22 @@ var NeuralNetworkDiagram = (function () {
         for (var row = 0; row < numRows; row++) {
             var isInput = col == 0;
             var isBias = !isOutput && row == numRows - 1;
+            var isDisabled = !isInput && !isOutput && !isBias
+                && this.net.layers[col - 1][row].disabled;
             var _a = this.getCenter(col, row), x = _a[0], y = _a[1];
-            this.drawNode(x, y, this.r, isInput, isBias);
+            this.drawNode(x, y, this.r, isInput, isBias, isDisabled);
+            if (!isInput && !isOutput && !isBias)
+                this.checkMouseInNeuron(x, y, this.r, col, row);
         }
     };
-    NeuralNetworkDiagram.prototype.drawNode = function (x, y, r, isInput, isBias) {
+    NeuralNetworkDiagram.prototype.drawNode = function (x, y, r, isInput, isBias, isDisabled) {
         this.ctx.strokeStyle = BORDER_COLOR;
         if (isBias)
             this.ctx.fillStyle = BIAS_COLOR;
         else if (isInput)
             this.ctx.fillStyle = INPUT_COLOR;
+        else if (isDisabled)
+            this.ctx.fillStyle = DISABLED_COLOR;
         else
             this.ctx.fillStyle = NEURON_COLOR;
         if (isInput || isBias) {
@@ -116,14 +127,45 @@ var NeuralNetworkDiagram = (function () {
     NeuralNetworkDiagram.prototype.isOutput = function (col) {
         return col == this.net.layerSizes.length;
     };
+    // ---------- Neuron/synapse enable/disable ---------------
+    NeuralNetworkDiagram.prototype.registerMouse = function () {
+        var _this = this;
+        $(this.canvas)
+            .on('mousemove', function (evt) {
+            _this.mouseX = evt.offsetX;
+            _this.mouseY = evt.offsetY;
+            _this.mouseNeuron = null;
+            _this.draw();
+            if (_this.mouseNeuron)
+                _this.canvas.classList.add(SELECT_CLASS);
+            else
+                _this.canvas.classList.remove(SELECT_CLASS);
+        })
+            .on('click', function (evt) {
+            if (!_this.mouseNeuron)
+                return;
+            _this.mouseNeuron.disabled = !_this.mouseNeuron.disabled;
+            _this.draw();
+        });
+    };
+    NeuralNetworkDiagram.prototype.checkMouseInNeuron = function (x, y, r, col, row) {
+        if (this.mouseNeuron)
+            return;
+        var dx = this.mouseX - x;
+        var dy = this.mouseY - y;
+        if (dx * dx + dy * dy < r * r)
+            this.mouseNeuron = this.net.layers[col - 1][row];
+    };
     return NeuralNetworkDiagram;
 }());
 exports.NeuralNetworkDiagram = NeuralNetworkDiagram;
+
 },{}],2:[function(require,module,exports){
 "use strict";
 var DEFAULT_ACTIVATION_FUNCTION = sigmoid;
 var Neuron = (function () {
     function Neuron(numWeights) {
+        this.disabled = false;
         this.output = NaN;
         this.weights = [];
         for (var i = 0; i < numWeights; i++)
@@ -157,7 +199,10 @@ var NeuralNetwork = (function () {
     // -------------------- Forward propagation --------------------
     NeuralNetwork.prototype.forwardNeuron = function (neuron, inputs) {
         var weightedSum = inputs.reduce(function (accum, input, i) { return accum + input * neuron.weights[i]; }, 0);
-        neuron.output = this.activationFunc(weightedSum);
+        if (neuron.disabled)
+            neuron.output = 0;
+        else
+            neuron.output = this.activationFunc(weightedSum);
         return neuron.output;
     };
     NeuralNetwork.prototype.forward = function (inputs) {
@@ -279,12 +324,14 @@ function map2(array1, array2, cb) {
         return array2.map(function (e2, i) { return cb(array1[i], e2); });
 }
 exports.map2 = map2;
+
 },{}],3:[function(require,module,exports){
 "use strict";
 var neurons_1 = require('./neurons');
 var diagram_1 = require('./diagram');
 var text_utils_1 = require('./text-utils');
 var nn;
+var diagram = null;
 var worker;
 var learning = false;
 $(function () {
@@ -319,7 +366,7 @@ $(function () {
         var title = hidden ? 'Hide diagram' : 'Show diagram';
         $('#butdiagram').text(title);
         if (hidden)
-            new diagram_1.NeuralNetworkDiagram(nn, $diagram.get(0)).draw();
+            drawDiagram(nn, $diagram.get(0));
         $diagram.slideToggle();
     });
     // -------------------- Handle click on learn formula --------------------
@@ -330,8 +377,9 @@ $(function () {
     });
     $('#butformula').click(function (_) {
         var code = _js_editor.getModel().getValue();
+        var fun;
         // tslint:disable-next-line - Disables all rules for the following line
-        var fun = eval(code);
+        eval('fun = ' + code);
         var learnData = generateLearnData(getFormData(), fun);
         var learnText = learnData.map(function (example) {
             return formatNums(example.inputs) + '  /  ' + formatNums(example.outputs);
@@ -388,7 +436,14 @@ function nnLearned(nnJSON) {
     $('#liters').val(nn.learnIteration);
     $('#lerror').val(fmtNum(nn.learnError, 7));
     $('#buttest, #butdiagram').removeAttr('disabled');
-    new diagram_1.NeuralNetworkDiagram(nn, $('#nn-diagram').get(0)).draw();
+    drawDiagram(nn, $('#nn-diagram').get(0));
+}
+function drawDiagram(net, canvas) {
+    if (!diagram)
+        diagram = new diagram_1.NeuralNetworkDiagram(net, canvas);
+    else
+        diagram.net = nn;
+    diagram.draw();
 }
 // ------------------------- User input parsing -------------------------
 function getFormData() {
@@ -475,6 +530,7 @@ function fmtNum(n, len) {
         useGrouping: false
     });
 }
+
 },{"./diagram":1,"./neurons":2,"./text-utils":4}],4:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
@@ -513,5 +569,6 @@ function parseDataLines(allLines) {
 function parseNumbers(line) {
     return line.split(' ').filter(function (s) { return s.length > 0; }).map(function (s) { return parseFloat(s); });
 }
+
 },{}]},{},[3])
 //# sourceMappingURL=bundle.js.map

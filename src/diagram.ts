@@ -1,23 +1,29 @@
-import { NeuralNetwork } from './neurons';
+import { NeuralNetwork, Neuron } from './neurons';
 
 
 const BORDER_COLOR = 'black';
 const NEURON_COLOR = '#337AB7';
+const DISABLED_COLOR = '#AAA';
 const INPUT_COLOR = NEURON_COLOR;
 const BIAS_COLOR = '#2DD';
 const NEGATIVE_WEIGHT_HUE = 0;
 const POSITIVE_WEIGHT_HUE = 240;
+const SELECT_CLASS = 'diagram-select';
 
 
 export class NeuralNetworkDiagram {
 	ctx: CanvasRenderingContext2D;
 	r: number;
 	numCols: number;
+	mouseX = -1;
+	mouseY = -1;
+	mouseNeuron: Neuron | null;
 
 	constructor(public net: NeuralNetwork, public canvas: HTMLCanvasElement) {
 		let ctx = canvas.getContext('2d');
 		if (ctx) this.ctx = ctx;
 		this.numCols = this.net.layerSizes.length + 1;
+		this.registerMouse();
 		// Calculate radius
 		let maxRows = net.numInputs;
 		net.layers.forEach(layer => maxRows = Math.max(maxRows, layer.length));
@@ -76,17 +82,24 @@ export class NeuralNetworkDiagram {
 		for (let row = 0; row < numRows; row++) {
 			let isInput = col == 0;
 			let isBias = !isOutput && row == numRows - 1;
+			let isDisabled = !isInput && !isOutput && !isBias
+				&& this.net.layers[col - 1][row].disabled;
 			let [x, y] = this.getCenter(col, row);
-			this.drawNode(x, y, this.r, isInput, isBias);
+			this.drawNode(x, y, this.r, isInput, isBias, isDisabled);
+			if (!isInput && !isOutput && !isBias)
+				this.checkMouseInNeuron(x, y, this.r, col, row);
 		}
 	}
 
-	drawNode(x: number, y: number, r: number, isInput: boolean, isBias: boolean) {
+	drawNode(x: number, y: number, r: number,
+		isInput: boolean, isBias: boolean, isDisabled) {
 		this.ctx.strokeStyle = BORDER_COLOR;
 		if (isBias)
 			this.ctx.fillStyle = BIAS_COLOR;
 		else if (isInput)
 			this.ctx.fillStyle = INPUT_COLOR;
+		else if (isDisabled)
+			this.ctx.fillStyle = DISABLED_COLOR;
 		else
 			this.ctx.fillStyle = NEURON_COLOR;
 		if (isInput || isBias) {
@@ -123,5 +136,35 @@ export class NeuralNetworkDiagram {
 
 	isOutput(col: number): boolean {
 		return col == this.net.layerSizes.length;
+	}
+
+	// ---------- Neuron/synapse enable/disable ---------------
+
+	registerMouse() {
+		$(this.canvas)
+		.on('mousemove', evt => {
+			this.mouseX = evt.offsetX;
+			this.mouseY = evt.offsetY;
+			this.mouseNeuron = null;
+			this.draw();
+			if (this.mouseNeuron)
+				this.canvas.classList.add(SELECT_CLASS);
+			else
+				this.canvas.classList.remove(SELECT_CLASS);
+		})
+		.on('click', evt => {
+			if (!this.mouseNeuron) return;
+			this.mouseNeuron.disabled = !this.mouseNeuron.disabled;
+			this.draw();
+		});
+	}
+
+	checkMouseInNeuron(x: number, y: number, r: number,
+		col: number, row: number) {
+		if (this.mouseNeuron) return;
+		let dx = this.mouseX - x;
+		let dy = this.mouseY - y;
+		if (dx * dx + dy * dy < r * r)
+			this.mouseNeuron = this.net.layers[col - 1][row];
 	}
 }

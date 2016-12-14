@@ -13,6 +13,7 @@ export interface Example {
 export class Neuron {
 	weights: number[];
 	output: number;
+	disabled = false;
 
 	constructor(numWeights: number) {
 		this.output = NaN;
@@ -60,7 +61,10 @@ export class NeuralNetwork {
 	forwardNeuron(neuron: Neuron, inputs: number[]): number {
 		let weightedSum = inputs.reduce(
 			(accum, input, i) => accum + input * neuron.weights[i], 0);
-		neuron.output = this.activationFunc(weightedSum);
+		if (neuron.disabled)
+			neuron.output = 0;
+		else
+			neuron.output = this.activationFunc(weightedSum);
 		return neuron.output;
 	}
 

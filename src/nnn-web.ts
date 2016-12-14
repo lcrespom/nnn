@@ -4,6 +4,7 @@ import txtutils from './text-utils';
 
 declare var _js_editor: any;
 let nn: NeuralNetwork;
+let diagram: NeuralNetworkDiagram | null = null;
 let worker: Worker;
 let learning = false;
 
@@ -39,7 +40,7 @@ $(function() {
 		let title = hidden ? 'Hide diagram' : 'Show diagram';
 		$('#butdiagram').text(title);
 		if (hidden)
-			new NeuralNetworkDiagram(nn, <HTMLCanvasElement>$diagram.get(0)).draw();
+			drawDiagram(nn, <HTMLCanvasElement>$diagram.get(0));
 		$diagram.slideToggle();
 	});
 	// -------------------- Handle click on learn formula --------------------
@@ -115,9 +116,16 @@ function nnLearned(nnJSON) {
 	$('#liters').val(nn.learnIteration);
 	$('#lerror').val(fmtNum(nn.learnError, 7));
 	$('#buttest, #butdiagram').removeAttr('disabled');
-	new NeuralNetworkDiagram(nn, <HTMLCanvasElement>$('#nn-diagram').get(0)).draw();
+	drawDiagram(nn, <HTMLCanvasElement>$('#nn-diagram').get(0));
 }
 
+function drawDiagram(net: NeuralNetwork, canvas: HTMLCanvasElement) {
+	if (!diagram)
+		diagram = new NeuralNetworkDiagram(net, canvas);
+	else
+		diagram.net = nn;
+	diagram.draw();
+}
 
 // ------------------------- User input parsing -------------------------
 
