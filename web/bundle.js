@@ -352,9 +352,8 @@ $(function () {
         var tests = text_utils_1.default.parseLearnLines(formData.testLines, nn.numInputs);
         var testResults = [];
         tests.forEach(function (test) { return testResults.push(nn.forward(test.inputs)); });
-        var ranges = getRanges(tests.map(function (test) { return test.outputs; }));
         var strResult = neurons_1.map2(testResults, tests, function (result, test) { return formatNums(result) +
-            compareResult(result, test.outputs, ranges); }).join('\n');
+            compareResult(result, test.outputs); }).join('\n');
         $('#tout').text(strResult);
     });
     // -------------------- Handle click on diagram button --------------------
@@ -490,32 +489,17 @@ function generateInputs(numInputs, samplesPerInput, samples, startAt) {
     }
 }
 // -------------------- Misc --------------------
-function getRanges(nums) {
-    if (nums.length == 0)
-        return [];
-    var MAX_START = nums[0].map(function (x) { return Number.MAX_VALUE; });
-    var MIN_START = MAX_START.map(function (x) { return -x; });
-    var mins = nums.reduce(function (prevs, currs) {
-        return neurons_1.map2(prevs, currs, function (p, c) { return Math.min(p, c); });
-    }, MAX_START);
-    var maxs = nums.reduce(function (prevs, currs) {
-        return neurons_1.map2(prevs, currs, function (p, c) { return Math.max(p, c); });
-    }, MIN_START);
-    var ranges = neurons_1.map2(mins, maxs, function (min, max) { return max - min; });
-    if (ranges.filter(function (x) { return isNaN(x); }).length > 0)
-        ranges = [];
-    return ranges;
-}
-function compareResult(actual, expected, ranges) {
-    if (ranges.length == 0 || expected.length == 0)
+function compareResult(actual, expected) {
+    if (expected.length == 0)
         return '';
     return '  /  (' +
-        actual.map(function (act, i) { return numError(act, expected[i], ranges[i]).toLocaleString('en-US', {
+        actual.map(function (act, i) { return numError(act, expected[i]).toLocaleString('en-US', {
             style: 'percent',
             maximumFractionDigits: 3
         }); }).join('  ') + ')';
 }
 function numError(actual, expected, range) {
+    if (range === void 0) { range = 1; }
     return Math.abs((actual - expected) / range);
 }
 function formatNums(nums, len) {

@@ -26,10 +26,9 @@ $(function() {
 		let tests = txtutils.parseLearnLines(formData.testLines, nn.numInputs);
 		let testResults: number[][] = [];
 		tests.forEach(test => testResults.push(nn.forward(test.inputs)));
-		let ranges = getRanges(tests.map(test => test.outputs));
 		let strResult = map2(testResults, tests,
 			(result, test) => formatNums(result) +
-				compareResult(result, test.outputs, ranges)).join('\n');
+				compareResult(result, test.outputs)).join('\n');
 		$('#tout').text(strResult);
 	});
 	// -------------------- Handle click on diagram button --------------------
@@ -177,29 +176,16 @@ function generateInputs(numInputs: number, samplesPerInput: number,
 
 // -------------------- Misc --------------------
 
-function getRanges(nums: number[][]): number[] {
-	if (nums.length == 0) return [];
-	let MAX_START = nums[0].map(x => Number.MAX_VALUE);
-	let MIN_START = MAX_START.map(x => -x);
-	let mins = nums.reduce((prevs, currs) =>
-		map2(prevs, currs, (p, c) => Math.min(p, c)), MAX_START);
-	let maxs = nums.reduce((prevs, currs) =>
-		map2(prevs, currs, (p, c) => Math.max(p, c)), MIN_START);
-	let ranges = map2(mins, maxs, (min, max) => max - min);
-	if (ranges.filter(x => isNaN(x)).length > 0) ranges = [];
-	return ranges;
-}
-
-function compareResult(actual: number[], expected: number[], ranges: number[]): string {
-	if (ranges.length == 0 || expected.length == 0) return '';
+function compareResult(actual: number[], expected: number[]): string {
+	if (expected.length == 0) return '';
 	return '  /  (' +
-		actual.map((act, i) => numError(act, expected[i], ranges[i]).toLocaleString('en-US', {
+		actual.map((act, i) => numError(act, expected[i]).toLocaleString('en-US', {
 			style: 'percent',
 			maximumFractionDigits: 3
 		})).join('  ') + ')';
 }
 
-function numError(actual: number, expected: number, range: number): number {
+function numError(actual: number, expected: number, range = 1): number {
 	return Math.abs((actual - expected) / range);
 }
 
