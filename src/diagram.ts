@@ -11,6 +11,28 @@ const POSITIVE_WEIGHT_HUE = 240;
 const SELECT_CLASS = 'diagram-select';
 
 
+class Synapse {
+	constructor(public neuron: Neuron, public weightNum: number) {}
+
+	toggle() {
+		if (this.isDisabled()) {
+			let w = this.neuron.disabledWeights[this.weightNum];
+			this.neuron.weights[this.weightNum] = w;
+			this.neuron.disabledWeights[this.weightNum] = Number.NaN;
+		}
+		else {
+			let w = this.neuron.weights[this.weightNum];
+			this.neuron.disabledWeights[this.weightNum] = w;
+			this.neuron.weights[this.weightNum] = 0;
+		}
+	}
+
+	isDisabled(): boolean {
+		return !isNaN(this.neuron.disabledWeights[this.weightNum]);
+	}
+}
+
+
 export class NeuralNetworkDiagram {
 	ctx: CanvasRenderingContext2D;
 	r: number;
@@ -18,6 +40,7 @@ export class NeuralNetworkDiagram {
 	mouseX = -1;
 	mouseY = -1;
 	mouseNeuron: Neuron | null;
+	mouseSynapse: Synapse | null;
 
 	constructor(public net: NeuralNetwork, public canvas: HTMLCanvasElement) {
 		let ctx = canvas.getContext('2d');
@@ -55,17 +78,25 @@ export class NeuralNetworkDiagram {
 
 	drawNodeWeights(i: number, j: number, minW: number, maxW: number) {
 		let neuron = this.net.layers[i][j];
+		this.ctx.lineWidth = 2;
 		for (let w = 0; w < neuron.weights.length; w++) {
 			let nw = neuron.weights[w];
-			let div = nw < 0 ? minW : maxW;
-			let hue = nw < 0 ? NEGATIVE_WEIGHT_HUE : POSITIVE_WEIGHT_HUE;
-			let lightness = 100 - 66 * (nw / div);
-			this.ctx.strokeStyle = `hsl(${hue}, 100%, ${lightness}%)`;
+			let synapse = new Synapse(neuron, w);
+			if (synapse.isDisabled()) {
+				this.ctx.strokeStyle = DISABLED_COLOR;
+			}
+			else {
+				let div = nw < 0 ? minW : maxW;
+				let hue = nw < 0 ? NEGATIVE_WEIGHT_HUE : POSITIVE_WEIGHT_HUE;
+				let lightness = 100 - 66 * (nw / div);
+				this.ctx.strokeStyle = `hsl(${hue}, 100%, ${lightness}%)`;
+			}
 			let [x1, y1] = this.getCenter(i, w);
 			let [x2, y2] = this.getCenter(i + 1, j);
 			this.ctx.beginPath();
 			this.ctx.moveTo(x1, y1);
 			this.ctx.lineTo(x2, y2);
+			this.checkMouseInSynapse(neuron, w);
 			this.ctx.stroke();
 		}
 	}
@@ -146,15 +177,18 @@ export class NeuralNetworkDiagram {
 			this.mouseX = evt.offsetX;
 			this.mouseY = evt.offsetY;
 			this.mouseNeuron = null;
+			this.mouseSynapse = null;
 			this.draw();
-			if (this.mouseNeuron)
+			if (this.mouseNeuron || this.mouseSynapse)
 				this.canvas.classList.add(SELECT_CLASS);
 			else
 				this.canvas.classList.remove(SELECT_CLASS);
 		})
 		.on('click', evt => {
-			if (!this.mouseNeuron) return;
-			this.mouseNeuron.disabled = !this.mouseNeuron.disabled;
+			if (this.mouseNeuron)
+				this.mouseNeuron.disabled = !this.mouseNeuron.disabled;
+			else if (this.mouseSynapse)
+				this.mouseSynapse.toggle();
 			this.draw();
 		});
 	}
@@ -167,4 +201,12 @@ export class NeuralNetworkDiagram {
 		if (dx * dx + dy * dy < r * r)
 			this.mouseNeuron = this.net.layers[col - 1][row];
 	}
+
+	checkMouseInSynapse(neuron: Neuron, weightNum: number) {
+		if (this.mouseSynapse) return;
+		let ctx = this.ctx as any;
+		if (ctx.isPointInStroke(this.mouseX, this.mouseY))
+			this.mouseSynapse = new Synapse(neuron, weightNum);
+	}
+
 }

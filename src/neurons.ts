@@ -14,12 +14,16 @@ export class Neuron {
 	weights: number[];
 	output: number;
 	disabled = false;
+	disabledWeights: number[];
 
 	constructor(numWeights: number) {
 		this.output = NaN;
 		this.weights = [];
-		for (let i = 0; i < numWeights; i++)
+		this.disabledWeights = [];
+		for (let i = 0; i < numWeights; i++) {
 			this.weights.push(Math.random());
+			this.disabledWeights.push(Number.NaN);
+		}
 	}
 }
 

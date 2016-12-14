@@ -6,8 +6,11 @@ var Neuron = (function () {
         this.disabled = false;
         this.output = NaN;
         this.weights = [];
-        for (var i = 0; i < numWeights; i++)
+        this.disabledWeights = [];
+        for (var i = 0; i < numWeights; i++) {
             this.weights.push(Math.random());
+            this.disabledWeights.push(Number.NaN);
+        }
     }
     return Neuron;
 }());

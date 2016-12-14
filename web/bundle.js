@@ -8,6 +8,28 @@ var BIAS_COLOR = '#2DD';
 var NEGATIVE_WEIGHT_HUE = 0;
 var POSITIVE_WEIGHT_HUE = 240;
 var SELECT_CLASS = 'diagram-select';
+var Synapse = (function () {
+    function Synapse(neuron, weightNum) {
+        this.neuron = neuron;
+        this.weightNum = weightNum;
+    }
+    Synapse.prototype.toggle = function () {
+        if (this.isDisabled()) {
+            var w = this.neuron.disabledWeights[this.weightNum];
+            this.neuron.weights[this.weightNum] = w;
+            this.neuron.disabledWeights[this.weightNum] = Number.NaN;
+        }
+        else {
+            var w = this.neuron.weights[this.weightNum];
+            this.neuron.disabledWeights[this.weightNum] = w;
+            this.neuron.weights[this.weightNum] = 0;
+        }
+    };
+    Synapse.prototype.isDisabled = function () {
+        return !isNaN(this.neuron.disabledWeights[this.weightNum]);
+    };
+    return Synapse;
+}());
 var NeuralNetworkDiagram = (function () {
     function NeuralNetworkDiagram(net, canvas) {
         this.net = net;
@@ -51,17 +73,25 @@ var NeuralNetworkDiagram = (function () {
     };
     NeuralNetworkDiagram.prototype.drawNodeWeights = function (i, j, minW, maxW) {
         var neuron = this.net.layers[i][j];
+        this.ctx.lineWidth = 2;
         for (var w = 0; w < neuron.weights.length; w++) {
             var nw = neuron.weights[w];
-            var div = nw < 0 ? minW : maxW;
-            var hue = nw < 0 ? NEGATIVE_WEIGHT_HUE : POSITIVE_WEIGHT_HUE;
-            var lightness = 100 - 66 * (nw / div);
-            this.ctx.strokeStyle = "hsl(" + hue + ", 100%, " + lightness + "%)";
+            var synapse = new Synapse(neuron, w);
+            if (synapse.isDisabled()) {
+                this.ctx.strokeStyle = DISABLED_COLOR;
+            }
+            else {
+                var div = nw < 0 ? minW : maxW;
+                var hue = nw < 0 ? NEGATIVE_WEIGHT_HUE : POSITIVE_WEIGHT_HUE;
+                var lightness = 100 - 66 * (nw / div);
+                this.ctx.strokeStyle = "hsl(" + hue + ", 100%, " + lightness + "%)";
+            }
             var _a = this.getCenter(i, w), x1 = _a[0], y1 = _a[1];
             var _b = this.getCenter(i + 1, j), x2 = _b[0], y2 = _b[1];
             this.ctx.beginPath();
             this.ctx.moveTo(x1, y1);
             this.ctx.lineTo(x2, y2);
+            this.checkMouseInSynapse(neuron, w);
             this.ctx.stroke();
         }
     };
@@ -135,16 +165,18 @@ var NeuralNetworkDiagram = (function () {
             _this.mouseX = evt.offsetX;
             _this.mouseY = evt.offsetY;
             _this.mouseNeuron = null;
+            _this.mouseSynapse = null;
             _this.draw();
-            if (_this.mouseNeuron)
+            if (_this.mouseNeuron || _this.mouseSynapse)
                 _this.canvas.classList.add(SELECT_CLASS);
             else
                 _this.canvas.classList.remove(SELECT_CLASS);
         })
             .on('click', function (evt) {
-            if (!_this.mouseNeuron)
-                return;
-            _this.mouseNeuron.disabled = !_this.mouseNeuron.disabled;
+            if (_this.mouseNeuron)
+                _this.mouseNeuron.disabled = !_this.mouseNeuron.disabled;
+            else if (_this.mouseSynapse)
+                _this.mouseSynapse.toggle();
             _this.draw();
         });
     };
@@ -155,6 +187,13 @@ var NeuralNetworkDiagram = (function () {
         var dy = this.mouseY - y;
         if (dx * dx + dy * dy < r * r)
             this.mouseNeuron = this.net.layers[col - 1][row];
+    };
+    NeuralNetworkDiagram.prototype.checkMouseInSynapse = function (neuron, weightNum) {
+        if (this.mouseSynapse)
+            return;
+        var ctx = this.ctx;
+        if (ctx.isPointInStroke(this.mouseX, this.mouseY))
+            this.mouseSynapse = new Synapse(neuron, weightNum);
     };
     return NeuralNetworkDiagram;
 }());
@@ -168,8 +207,11 @@ var Neuron = (function () {
         this.disabled = false;
         this.output = NaN;
         this.weights = [];
-        for (var i = 0; i < numWeights; i++)
+        this.disabledWeights = [];
+        for (var i = 0; i < numWeights; i++) {
             this.weights.push(Math.random());
+            this.disabledWeights.push(Number.NaN);
+        }
     }
     return Neuron;
 }());
